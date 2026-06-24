@@ -1,18 +1,20 @@
 <?php
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
-class Ticket extends Model
-{
+class Ticket extends Model {
     protected $table    = 'tickets';
     protected $fillable = [
         'numero','titulo','descripcion','prioridad','estado','origen',
         'categoria_id','solicitante_id','tecnico_id','creado_por',
-        'fecha_limite','fecha_resolucion','nota_cierre',
+        'fecha_limite','estimado_en','fecha_resolucion','nota_cierre','reabierto',
     ];
-    protected $casts = ['fecha_limite' => 'datetime', 'fecha_resolucion' => 'datetime'];
+    protected $casts = [
+        'fecha_limite'     => 'datetime',
+        'estimado_en'      => 'datetime',
+        'fecha_resolucion' => 'datetime',
+        'reabierto'        => 'boolean',
+    ];
 
     public function categoria()    { return $this->belongsTo(Categoria::class); }
     public function solicitante()  { return $this->belongsTo(Usuario::class, 'solicitante_id'); }
@@ -22,6 +24,8 @@ class Ticket extends Model
     public function calificacion() { return $this->hasOne(Calificacion::class); }
     public function historial()    { return $this->hasMany(HistorialTicket::class)->orderBy('created_at'); }
     public function adjuntos()     { return $this->hasMany(Adjunto::class)->orderBy('created_at'); }
+    public function hijosVinculados() { return $this->hasMany(TicketVinculado::class, 'ticket_padre_id'); }
+    public function padreVinculado()  { return $this->hasOne(TicketVinculado::class, 'ticket_hijo_id'); }
 
     public function estaVencido(): bool {
         return $this->fecha_limite && now()->gt($this->fecha_limite)
