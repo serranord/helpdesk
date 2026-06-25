@@ -6,6 +6,7 @@ use App\Models\Notificacion; use App\Models\TicketVinculado;
 use App\Mail\TicketCreado; use App\Mail\TicketActualizado; use App\Mail\TicketResuelto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Services\TeamsService;
 
 class TicketController extends Controller {
 
@@ -71,6 +72,16 @@ class TicketController extends Controller {
         ]);
 
         ActividadLog::registrar('creó', 'tickets', "Creó ticket {$ticket->numero}", $ticket->numero);
+        // Notificar Teams
+        try {
+            $teams = new TeamsService();
+            $ticket->load(['categoria','solicitante']);
+            if ($ticket->prioridad === 'critica') {
+                $teams->notificarTicketCritico($ticket);
+            } else {
+                $teams->notificarTicketNuevo($ticket);
+            }
+        } catch (\Exception $e) {}
         HistorialTicket::registrar($ticket->id, 'creado', 'Ticket creado');
 
         try {
@@ -107,6 +118,7 @@ class TicketController extends Controller {
 
         if ($request->estado === 'resuelto') {
             try { $ticket->load(['solicitante','categoria']); Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+            try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
         }
 
         if ($ticket->solicitante_id !== auth()->id()) {
@@ -174,6 +186,7 @@ class TicketController extends Controller {
             Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket reabierto','mensaje'=>"El ticket {$ticket->numero} fue reabierto por el solicitante",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
 
+        try { (new TeamsService())->notificarReabierto($ticket); } catch (\Exception $e) {}
         return back()->with('success', 'Ticket reabierto correctamente. El equipo de TI fue notificado.');
     }
 
