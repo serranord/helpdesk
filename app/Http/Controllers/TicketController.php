@@ -4,9 +4,9 @@ use App\Models\Ticket; use App\Models\Categoria; use App\Models\Usuario;
 use App\Models\Comentario; use App\Models\ActividadLog; use App\Models\HistorialTicket;
 use App\Models\Notificacion; use App\Models\TicketVinculado;
 use App\Mail\TicketCreado; use App\Mail\TicketActualizado; use App\Mail\TicketResuelto;
+use App\Services\TeamsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Services\TeamsService;
 
 class TicketController extends Controller {
 
@@ -72,21 +72,17 @@ class TicketController extends Controller {
         ]);
 
         ActividadLog::registrar('creó', 'tickets', "Creó ticket {$ticket->numero}", $ticket->numero);
-        // Notificar Teams
-        try {
-            $teams = new TeamsService();
-            $ticket->load(['categoria','solicitante']);
-            if ($ticket->prioridad === 'critica') {
-                $teams->notificarTicketCritico($ticket);
-            } else {
-                $teams->notificarTicketNuevo($ticket);
-            }
-        } catch (\Exception $e) {}
         HistorialTicket::registrar($ticket->id, 'creado', 'Ticket creado');
 
+        // Correo de confirmación
         try {
             $ticket->load(['categoria','solicitante']);
             Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
+        } catch (\Exception $e) {}
+
+        // Teams — notifica al canal con mención al solicitante
+        try {
+            (new TeamsService())->notificarTicketNuevo($ticket);
         } catch (\Exception $e) {}
 
         return redirect()->route('tickets.show', $ticket)->with('success', "Ticket {$ticket->numero} creado correctamente.");
@@ -115,12 +111,18 @@ class TicketController extends Controller {
             $ticket->nota_cierre = $request->nota_cierre;
         }
         $ticket->save();
+        $ticket->load(['solicitante','tecnico','categoria']);
 
+        // Correo si fue resuelto
         if ($request->estado === 'resuelto') {
-            try { $ticket->load(['solicitante','categoria']); Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+            try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
             try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
+        } else {
+            // Teams — notifica cambio de estado con mención al solicitante
+            try { (new TeamsService())->notificarCambioEstado($ticket, $viejo); } catch (\Exception $e) {}
         }
 
+        // Notificación interna
         if ($ticket->solicitante_id !== auth()->id()) {
             Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Estado actualizado','mensaje'=>"Tu solicitud {$ticket->numero} cambió a: {$ticket->estado_label}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
@@ -135,10 +137,18 @@ class TicketController extends Controller {
         $ticket->tecnico_id = $request->tecnico_id;
         if ($request->tecnico_id && in_array($ticket->estado, ['nuevo','abierto'])) $ticket->estado = 'asignado';
         $ticket->save();
+        $ticket->load(['solicitante','tecnico','categoria']);
 
         $nombre = $ticket->tecnico?->nombre ?? 'sin técnico';
+
+        // Notificación interna al técnico
         if ($ticket->tecnico_id && $ticket->tecnico_id !== auth()->id()) {
             Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket asignado','mensaje'=>"Se te asignó el ticket {$ticket->numero}: {$ticket->titulo}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+        }
+
+        // Teams — notifica al solicitante que fue asignado
+        if ($ticket->tecnico_id) {
+            try { (new TeamsService())->notificarTecnicoAsignado($ticket); } catch (\Exception $e) {}
         }
 
         HistorialTicket::registrar($ticket->id, 'asignacion', "Asignado a {$nombre}");
@@ -161,9 +171,7 @@ class TicketController extends Controller {
         $ticket->estimado_en = $request->estimado_en;
         $ticket->save();
 
-        // Notificar al solicitante
         Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Tiempo estimado de atención','mensaje'=>"Tu solicitud {$ticket->numero} será atendida aproximadamente el ".date('d/m/Y H:i', strtotime($request->estimado_en)),'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
-
         HistorialTicket::registrar($ticket->id, 'estimacion', "Tiempo estimado: ".date('d/m/Y H:i', strtotime($request->estimado_en)));
         return back()->with('success', 'Tiempo estimado establecido. El solicitante fue notificado.');
     }
@@ -173,7 +181,7 @@ class TicketController extends Controller {
         if ($ticket->solicitante_id !== $user->id) abort(403);
         if (!in_array($ticket->estado, ['resuelto','cerrado'])) return back()->with('error', 'Solo puedes reabrir tickets resueltos o cerrados.');
 
-        $ticket->estado   = 'abierto';
+        $ticket->estado    = 'abierto';
         $ticket->reabierto = true;
         $ticket->fecha_resolucion = null;
         $ticket->save();
@@ -181,22 +189,19 @@ class TicketController extends Controller {
         Comentario::create(['ticket_id'=>$ticket->id,'usuario_id'=>$user->id,'contenido'=>"Ticket reabierto. Motivo: ".($request->motivo ?? 'El problema persiste.'),'es_interno'=>false]);
         HistorialTicket::registrar($ticket->id, 'reapertura', 'Ticket reabierto por el solicitante');
 
-        // Notificar al técnico
         if ($ticket->tecnico_id) {
-            Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket reabierto','mensaje'=>"El ticket {$ticket->numero} fue reabierto por el solicitante",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+            Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket reabierto','mensaje'=>"El ticket {$ticket->numero} fue reabierto",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
 
-        try { (new TeamsService())->notificarReabierto($ticket); } catch (\Exception $e) {}
-        return back()->with('success', 'Ticket reabierto correctamente. El equipo de TI fue notificado.');
+        try { $ticket->load(['solicitante','tecnico','categoria']); (new TeamsService())->notificarReabierto($ticket); } catch (\Exception $e) {}
+        return back()->with('success', 'Ticket reabierto correctamente.');
     }
 
     public function vincular(Request $request, Ticket $ticket) {
-        $request->validate(['ticket_hijo_id' => 'required|exists:tickets,id|different:id']);
+        $request->validate(['ticket_hijo_id' => 'required|exists:tickets,id']);
         $hijo = Ticket::find($request->ticket_hijo_id);
-
         if (TicketVinculado::where('ticket_hijo_id', $hijo->id)->exists())
             return back()->with('error', 'Ese ticket ya está vinculado a otro ticket padre.');
-
         TicketVinculado::create(['ticket_padre_id' => $ticket->id, 'ticket_hijo_id' => $hijo->id]);
         HistorialTicket::registrar($ticket->id, 'vinculacion', "Vinculado con {$hijo->numero}");
         return back()->with('success', "Ticket {$hijo->numero} vinculado correctamente.");
@@ -212,7 +217,7 @@ class TicketController extends Controller {
         if ($user->esSolicitante() && $ticket->solicitante_id !== $user->id) abort(403);
         $request->validate(['contenido' => 'required|string|max:2000']);
 
-        $esInterno = $user->puedeGestionar() && $request->boolean('es_interno');
+        $esInterno  = $user->puedeGestionar() && $request->boolean('es_interno');
         $comentario = Comentario::create(['ticket_id'=>$ticket->id,'usuario_id'=>$user->id,'contenido'=>$request->contenido,'es_interno'=>$esInterno]);
 
         if ($user->puedeGestionar() && in_array($ticket->estado, ['nuevo','abierto','asignado'])) {
@@ -221,11 +226,16 @@ class TicketController extends Controller {
 
         $notificarA = $user->puedeGestionar() ? $ticket->solicitante_id : $ticket->tecnico_id;
         if ($notificarA && $notificarA !== $user->id && !$esInterno) {
-            Notificacion::create(['usuario_id'=>$notificarA,'tipo'=>'comentario','titulo'=>'Nuevo comentario','mensaje'=>"Nuevo comentario en {$ticket->numero}: {$ticket->titulo}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+            Notificacion::create(['usuario_id'=>$notificarA,'tipo'=>'comentario','titulo'=>'Nuevo comentario','mensaje'=>"Nuevo comentario en {$ticket->numero}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
 
+        // Teams — notifica al solicitante cuando el técnico comenta
         if ($user->puedeGestionar() && !$esInterno) {
-            try { $ticket->load(['solicitante','categoria']); Mail::to($ticket->solicitante->correo)->send(new TicketActualizado($ticket, $comentario)); } catch (\Exception $e) {}
+            try {
+                $ticket->load(['solicitante','tecnico','categoria']);
+                Mail::to($ticket->solicitante->correo)->send(new TicketActualizado($ticket, $comentario));
+                (new TeamsService())->notificarActualizacion($ticket, $request->contenido);
+            } catch (\Exception $e) {}
         }
 
         ActividadLog::registrar('comentó', 'tickets', "Comentó en {$ticket->numero}", $ticket->numero);
