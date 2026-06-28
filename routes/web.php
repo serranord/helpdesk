@@ -15,8 +15,13 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\AdjuntoController;
 use App\Http\Controllers\TransparenciaController;
 use App\Http\Controllers\AvisoTIController;
+use App\Http\Controllers\MicrosoftAuthController;
 
 Route::get ('/login',    [AuthController::class, 'showLogin'])->name('login');
+
+// Microsoft SSO
+Route::get('/auth/microsoft',          [MicrosoftAuthController::class, 'redirect'])->name('microsoft.redirect');
+Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('microsoft.callback');
 Route::post('/login',    [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout',   [AuthController::class, 'logout'])->name('logout');
 Route::get ('/registro', [AuthController::class, 'showRegister'])->name('register');
