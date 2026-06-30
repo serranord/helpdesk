@@ -5,7 +5,6 @@
 
 <div style="max-width:700px">
 
-{{-- Selector de plantillas (solo gestores) --}}
 @if(auth()->user()->puedeGestionar() && $plantillas->count() > 0)
 <div class="card" style="margin-bottom:16px;padding:16px 20px">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -37,7 +36,8 @@
 
             <div class="form-group">
                 <label class="form-label">¿Cuál es tu problema? <span class="required">*</span></label>
-                <input type="text" name="titulo" id="f-titulo" class="form-control" value="{{ old('titulo') }}" required
+                <input type="text" name="titulo" id="f-titulo" class="form-control"
+                    value="{{ old('titulo') }}" required
                     placeholder="Ej: No puedo imprimir, Mi computadora no enciende...">
             </div>
 
@@ -49,6 +49,9 @@
                     <option value="{{ $c->id }}" @selected(old('categoria_id')==$c->id)>{{ $c->icono }} {{ $c->nombre }}</option>
                     @endforeach
                 </select>
+                @if(!auth()->user()->puedeGestionar())
+                <div class="form-hint">Selecciona el tipo de solicitud que mejor describe tu caso</div>
+                @endif
             </div>
 
             <div class="form-group">
@@ -101,7 +104,6 @@
 </div>
 </div>
 
-{{-- Datos de plantillas en JSON --}}
 @if(auth()->user()->puedeGestionar())
 <script>
 const plantillasData = @json($plantillas->keyBy('id'));
@@ -115,7 +117,6 @@ function usarPlantilla(id) {
     if (prio) prio.value = p.prioridad;
     document.getElementById('f-titulo').focus();
 }
-// Cargar plantilla desde URL si viene el parámetro
 @if(request('plantilla'))
 window.addEventListener('DOMContentLoaded', () => usarPlantilla({{ request('plantilla') }}));
 @endif

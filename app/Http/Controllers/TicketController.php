@@ -34,7 +34,10 @@ class TicketController extends Controller {
     }
 
     public function create() {
-        $categorias   = Categoria::where('activa',true)->get();
+        // Solicitantes solo ven categorías marcadas como visibles para usuario
+        $categorias = auth()->user()->puedeGestionar()
+            ? Categoria::where('activa', true)->get()
+            : Categoria::where('activa', true)->where('visible_usuario', true)->get();
         $solicitantes = Usuario::where('estado','activo')->orderBy('nombre')->get();
         $tecnicos     = Usuario::where('estado','activo')->whereIn('rol',['tecnico','administrador'])->orderBy('nombre')->get();
         $plantillas   = \App\Models\Plantilla::where('activa',true)->with('categoria')->orderBy('nombre')->get();

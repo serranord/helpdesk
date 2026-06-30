@@ -24,8 +24,9 @@ class CategoriaController extends Controller {
             'nombre'     => 'required|string|max:100',
             'descripcion'=> 'nullable|string|max:255',
             'icono'      => 'nullable|string|max:10',
-            'sla_horas'  => 'required|integer|min:1',
-            'activa'     => 'boolean',
+            'sla_horas'       => 'required|integer|min:1',
+            'activa'          => 'boolean',
+            'visible_usuario' => 'boolean',
         ]);
         $categoria->update($data);
         return back()->with('success', 'Categoría actualizada.');

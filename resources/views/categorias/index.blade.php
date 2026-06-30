@@ -12,7 +12,7 @@
 <div class="card" style="padding:0">
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Categoría</th><th>Descripción</th><th>SLA</th><th>Tickets</th><th>Estado</th><th></th></tr></thead>
+            <thead><tr><th>Categoría</th><th>Descripción</th><th>SLA</th><th>Tickets</th><th>Visible usuario</th><th>Estado</th><th></th></tr></thead>
             <tbody>
                 @forelse($categorias as $c)
                 <tr>
@@ -20,6 +20,20 @@
                     <td class="text-muted">{{ $c->descripcion ?? '—' }}</td>
                     <td><span class="mono">{{ $c->sla_horas }}h</span></td>
                     <td>{{ $c->tickets_count }}</td>
+                    <td>
+                        <form action="{{ route('categorias.update',$c) }}" method="POST">
+                            @csrf @method('PUT')
+                            <input type="hidden" name="nombre" value="{{ $c->nombre }}">
+                            <input type="hidden" name="descripcion" value="{{ $c->descripcion }}">
+                            <input type="hidden" name="icono" value="{{ $c->icono }}">
+                            <input type="hidden" name="sla_horas" value="{{ $c->sla_horas }}">
+                            <input type="hidden" name="activa" value="{{ $c->activa ? 1 : 0 }}">
+                            <input type="hidden" name="visible_usuario" value="{{ $c->visible_usuario ? 0 : 1 }}">
+                            <button type="submit" class="badge {{ $c->visible_usuario ? 'badge-green' : 'badge-gray' }}" style="border:none;cursor:pointer">
+                                {{ $c->visible_usuario ? '✅ Visible' : '🔒 Solo TI' }}
+                            </button>
+                        </form>
+                    </td>
                     <td><span class="badge {{ $c->activa ? 'badge-green' : 'badge-gray' }}">{{ $c->activa ? 'Activa' : 'Inactiva' }}</span></td>
                     <td>
                         <button onclick="abrirEditar({{ $c->id }},'{{ addslashes($c->nombre) }}','{{ addslashes($c->descripcion) }}','{{ $c->icono }}',{{ $c->sla_horas }},{{ $c->activa ? 1 : 0 }})" class="btn btn-outline btn-sm">Editar</button>
