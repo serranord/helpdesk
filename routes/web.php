@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\AdjuntoController;
 use App\Http\Controllers\TransparenciaController;
 use App\Http\Controllers\AvisoTIController;
+use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\MicrosoftAuthController;
 
 Route::get ('/login',    [AuthController::class, 'showLogin'])->name('login');
@@ -88,6 +89,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Solo administradores
     Route::middleware('solo.admin')->group(function () {
+        Route::get ('/configuracion',                        [ConfiguracionController::class, 'index'])->name('configuracion.index');
+        Route::put ('/configuracion',                        [ConfiguracionController::class, 'update'])->name('configuracion.update');
+        Route::post('/configuracion/menu',                   [ConfiguracionController::class, 'storeMenu'])->name('configuracion.menu.store');
+        Route::put ('/configuracion/menu/{menuAplicacion}',  [ConfiguracionController::class, 'updateMenu'])->name('configuracion.menu.update');
+        Route::delete('/configuracion/menu/{menuAplicacion}',[ConfiguracionController::class, 'destroyMenu'])->name('configuracion.menu.destroy');
         Route::resource('usuarios', UsuarioController::class)->except(['show']);
         Route::get ('/categorias',             [CategoriaController::class, 'index'])->name('categorias.index');
         Route::post('/categorias',             [CategoriaController::class, 'store'])->name('categorias.store');
