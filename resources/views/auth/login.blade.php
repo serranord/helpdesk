@@ -10,7 +10,7 @@
 body{font-family:'DM Sans',system-ui,sans-serif;background:#f4f6f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .wrap{width:100%;max-width:420px}
 .brand{text-align:center;margin-bottom:28px}
-.brand img{height:60px;width:auto;margin-bottom:12px}
+.brand img{height:90px;width:auto;margin-bottom:12px}
 .brand-sub{font-size:12px;color:#64748b;margin-top:3px}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .card-title{font-size:18px;font-weight:700;color:#002049;margin-bottom:4px}

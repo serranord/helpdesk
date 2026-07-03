@@ -15,35 +15,49 @@
         </div>
         <form action="{{ route('configuracion.update') }}" method="POST">
             @csrf @method('PUT')
-            <div style="display:flex;flex-direction:column;gap:16px">
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
+            <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+
+                {{-- Toggle Registro manual --}}
+                @php $registroOn = ($configs['registro_habilitado']->valor ?? '1') === '1'; @endphp
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
                     <div>
                         <div style="font-size:14px;font-weight:600;color:var(--text)">Registro manual de usuarios</div>
                         <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">Permite que los usuarios se registren con correo y contraseña</div>
                     </div>
-                    <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer">
-                        <input type="checkbox" name="registro_habilitado" value="1" {{ ($configs['registro_habilitado']->valor ?? '1') === '1' ? 'checked' : '' }} style="opacity:0;width:0;height:0">
-                        <span style="position:absolute;inset:0;background:{{ ($configs['registro_habilitado']->valor ?? '1') === '1' ? '#002049' : '#cbd5e1' }};border-radius:24px;transition:.3s;cursor:pointer" onclick="this.style.background=this.previousElementSibling.checked?'#cbd5e1':'#002049';this.previousElementSibling.checked=!this.previousElementSibling.checked">
-                            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;transform:{{ ($configs['registro_habilitado']->valor ?? '1') === '1' ? 'translateX(20px)' : 'translateX(0)' }}"></span>
-                        </span>
-                    </label>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:12px;color:var(--text-muted)" id="label-registro">{{ $registroOn ? 'Activado' : 'Desactivado' }}</span>
+                        <div onclick="toggleSwitch('registro_habilitado','label-registro')"
+                             id="switch-registro"
+                             style="width:44px;height:24px;background:{{ $registroOn ? '#002049' : '#cbd5e1' }};border-radius:24px;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0">
+                            <div style="position:absolute;top:3px;left:{{ $registroOn ? '23px' : '3px' }};width:18px;height:18px;background:#fff;border-radius:50%;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"
+                                 id="dot-registro"></div>
+                        </div>
+                        <input type="hidden" name="registro_habilitado" id="registro_habilitado" value="{{ $registroOn ? '1' : '0' }}">
+                    </div>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
+                {{-- Toggle Solo SSO --}}
+                @php $soloSSOOn = ($configs['solo_sso']->valor ?? '0') === '1'; @endphp
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px">
                     <div>
                         <div style="font-size:14px;font-weight:600;color:var(--text)">Solo Microsoft 365 (SSO)</div>
                         <div style="font-size:12.5px;color:var(--text-muted);margin-top:3px">Oculta el formulario de correo/contraseña y solo muestra el botón de Microsoft</div>
                     </div>
-                    <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer">
-                        <input type="checkbox" name="solo_sso" value="1" {{ ($configs['solo_sso']->valor ?? '0') === '1' ? 'checked' : '' }} style="opacity:0;width:0;height:0">
-                        <span style="position:absolute;inset:0;background:{{ ($configs['solo_sso']->valor ?? '0') === '1' ? '#002049' : '#cbd5e1' }};border-radius:24px;transition:.3s;cursor:pointer" onclick="this.style.background=this.previousElementSibling.checked?'#cbd5e1':'#002049';this.previousElementSibling.checked=!this.previousElementSibling.checked">
-                            <span style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;transform:{{ ($configs['solo_sso']->valor ?? '0') === '1' ? 'translateX(20px)' : 'translateX(0)' }}"></span>
-                        </span>
-                    </label>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span style="font-size:12px;color:var(--text-muted)" id="label-sso">{{ $soloSSOOn ? 'Activado' : 'Desactivado' }}</span>
+                        <div onclick="toggleSwitch('solo_sso','label-sso')"
+                             id="switch-sso"
+                             style="width:44px;height:24px;background:{{ $soloSSOOn ? '#002049' : '#cbd5e1' }};border-radius:24px;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0">
+                            <div style="position:absolute;top:3px;left:{{ $soloSSOOn ? '23px' : '3px' }};width:18px;height:18px;background:#fff;border-radius:50%;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"
+                                 id="dot-sso"></div>
+                        </div>
+                        <input type="hidden" name="solo_sso" id="solo_sso" value="{{ $soloSSOOn ? '1' : '0' }}">
+                    </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="margin-top:16px">Guardar configuración</button>
+
+            <button type="submit" class="btn btn-primary">Guardar configuración</button>
         </form>
     </div>
 
@@ -135,4 +149,22 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleSwitch(campo, labelId) {
+    const input  = document.getElementById(campo);
+    const dot    = document.getElementById('dot-' + campo.replace('_habilitado','').replace('_','-').replace('solo-sso','sso').replace('registro-habilitado','registro'));
+    const sw     = document.getElementById('switch-' + campo.replace('_habilitado','').replace('solo_sso','sso').replace('registro_habilitado','registro'));
+    const label  = document.getElementById(labelId);
+    const isOn   = input.value === '1';
+
+    input.value       = isOn ? '0' : '1';
+    sw.style.background = isOn ? '#cbd5e1' : '#002049';
+    label.textContent   = isOn ? 'Desactivado' : 'Activado';
+
+    // Mover el dot
+    const dotEl = sw.querySelector('div');
+    dotEl.style.left = isOn ? '3px' : '23px';
+}
+</script>
 @endsection

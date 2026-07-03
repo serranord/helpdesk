@@ -1,17 +1,17 @@
 @php $menuApps = \App\Models\MenuAplicacion::activos(); @endphp
 @if($menuApps->count() > 0)
-<div style="position:fixed;top:0;left:0;right:0;height:36px;background:#002049;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0">
+<div style="position:fixed;top:0;left:0;right:0;height:40px;background:#fff;border-bottom:1px solid #e2e8f0;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
     @foreach($menuApps as $app)
     <a href="{{ $app->url }}" {{ $app->nueva_ventana ? 'target="_blank"' : '' }}
-       style="display:flex;align-items:center;gap:6px;padding:0 14px;height:36px;font-size:12.5px;font-weight:500;color:{{ request()->is(ltrim($app->url,'/')) ? '#fff' : 'rgba(255,255,255,.65)' }};text-decoration:none;border-right:1px solid rgba(255,255,255,.1);transition:color .15s;white-space:nowrap"
-       onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,.08)'"
-       onmouseout="this.style.color='rgba(255,255,255,.65)';this.style.background=''">
+       style="display:flex;align-items:center;gap:6px;padding:0 14px;height:40px;font-size:12.5px;font-weight:500;color:#374151;text-decoration:none;border-right:1px solid #e2e8f0;transition:all .15s;white-space:nowrap"
+       onmouseover="this.style.color='#002049';this.style.background='#f1f5f9'"
+       onmouseout="this.style.color='#374151';this.style.background=''">
         <span>{{ $app->icono }}</span> {{ $app->nombre }}
     </a>
     @endforeach
-    <div style="margin-left:auto;font-size:11px;color:rgba(255,255,255,.4)">AMCHAMDR · Sistemas</div>
+    <div style="margin-left:auto;font-size:11px;color:#94a3b8">AMCHAMDR · Sistemas</div>
 </div>
-<div style="height:36px"></div>
+<div style="height:40px"></div>
 @endif
 
 <!DOCTYPE html>
