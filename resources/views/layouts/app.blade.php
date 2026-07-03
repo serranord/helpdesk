@@ -1,5 +1,6 @@
 @php $menuApps = \App\Models\MenuAplicacion::activos(); @endphp
 @if($menuApps->count() > 0)
+<style>body{padding-top:40px!important} .sidebar{top:40px!important;height:calc(100vh - 40px)!important}</style>
 <div style="position:fixed;top:0;left:0;right:0;height:40px;background:#fff;border-bottom:1px solid #e2e8f0;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
     @foreach($menuApps as $app)
     <a href="{{ $app->url }}" {{ $app->nueva_ventana ? 'target="_blank"' : '' }}
@@ -11,7 +12,6 @@
     @endforeach
     <div style="margin-left:auto;font-size:11px;color:#94a3b8">AMCHAMDR · Sistemas</div>
 </div>
-<div style="height:40px"></div>
 @endif
 
 <!DOCTYPE html>

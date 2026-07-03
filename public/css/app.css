@@ -64,7 +64,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .user-role{font-size:10.5px;color:#94a3b8}
 
 /* ===== MAIN ===== */
-.main-wrapper{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main-wrapper{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;margin-top:0}
 
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .page-title{font-size:17px;font-weight:700;color:var(--navy)}
