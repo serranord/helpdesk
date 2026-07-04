@@ -10,4 +10,8 @@ return [
         'client_secret' => env('AZURE_CLIENT_SECRET'),
         'redirect'      => env('AZURE_REDIRECT_URI', '/auth/microsoft/callback'),
     ],
+    'api' => [
+        'token' => env('API_TOKEN', ''),
+    ],
+
 ];
