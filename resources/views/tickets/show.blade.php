@@ -303,31 +303,29 @@
         </div>
         @endif
 
-        {{-- Panel técnico --}}
+        {{-- Panel técnico unificado --}}
         @if($user->puedeGestionar())
         <div class="card">
-            <div class="section-title">Cambiar Estado</div>
-            <form action="{{ route('tickets.estado',$ticket) }}" method="POST">
+            <div class="card-title" style="margin-bottom:16px">⚙️ Gestión del ticket</div>
+            <form action="{{ route('tickets.gestionar',$ticket) }}" method="POST">
                 @csrf
-                <div class="form-group" style="margin-bottom:10px">
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Estado</label>
                     <select name="estado" class="form-control" id="select-estado">
                         @foreach($estados as $key => $label)
                         <option value="{{ $key }}" @selected($ticket->estado===$key)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom:10px" id="wrap-nota">
-                    <textarea name="nota_cierre" class="form-control" rows="2" placeholder="Nota de resolución (opcional)...">{{ $ticket->nota_cierre }}</textarea>
-                </div>
-                <button type="submit" class="btn btn-primary btn-sm" style="width:100%">Actualizar estado</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <div class="section-title">Asignar Técnico</div>
-            <form action="{{ route('tickets.asignar',$ticket) }}" method="POST">
-                @csrf
-                <div class="form-group" style="margin-bottom:10px">
+                <div class="form-group" style="margin-bottom:14px" id="wrap-nota">
+                    <label class="form-label">Nota de resolución</label>
+                    <textarea name="nota_cierre" class="form-control" rows="2" placeholder="Opcional...">{{ $ticket->nota_cierre }}</textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Técnico asignado</label>
                     <select name="tecnico_id" class="form-control">
                         <option value="">Sin asignar</option>
                         @foreach($tecnicos as $t)
@@ -335,15 +333,9 @@
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn btn-outline btn-sm" style="width:100%">Asignar</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <div class="section-title">Prioridad</div>
-            <form action="{{ route('tickets.prioridad',$ticket) }}" method="POST">
-                @csrf
-                <div class="form-group" style="margin-bottom:10px">
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Prioridad</label>
                     <select name="prioridad" class="form-control">
                         <option value="baja"    @selected($ticket->prioridad==='baja')>🟢 Baja</option>
                         <option value="media"   @selected($ticket->prioridad==='media')>🔵 Media</option>
@@ -351,20 +343,15 @@
                         <option value="critica" @selected($ticket->prioridad==='critica')>🔴 Crítica</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-outline btn-sm" style="width:100%">Actualizar</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <div class="section-title">🕐 Tiempo estimado de atención</div>
-            <form action="{{ route('tickets.estimar',$ticket) }}" method="POST">
-                @csrf
-                <div class="form-group" style="margin-bottom:10px">
+                <div class="form-group" style="margin-bottom:16px">
+                    <label class="form-label">🕐 Tiempo estimado de atención</label>
                     <input type="datetime-local" name="estimado_en" class="form-control"
                         value="{{ $ticket->estimado_en?->format('Y-m-d\TH:i') }}">
                     <div class="form-hint">El solicitante verá esta fecha y recibirá una notificación.</div>
                 </div>
-                <button type="submit" class="btn btn-outline btn-sm" style="width:100%">Establecer estimación</button>
+
+                <button type="submit" class="btn btn-primary" style="width:100%">💾 Guardar cambios</button>
             </form>
         </div>
 

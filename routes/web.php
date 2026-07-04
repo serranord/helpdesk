@@ -47,8 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get ('/tickets/{ticket}',              [TicketController::class, 'show'])->name('tickets.show');
     Route::post('/tickets/{ticket}/comentar',     [TicketController::class, 'comentar'])->name('tickets.comentar');
     Route::post('/tickets/{ticket}/calificar',    [CalificacionController::class, 'store'])->name('tickets.calificar');
-    Route::post  ('/tickets/{ticket}/reabrir',    [TicketController::class, 'reabrir'])->name('tickets.reabrir');
-    Route::delete('/tickets/{ticket}',             [TicketController::class, 'destroy'])->name('tickets.destroy');
+    Route::post('/tickets/{ticket}/reabrir',      [TicketController::class, 'reabrir'])->name('tickets.reabrir');
+    Route::delete('/tickets/{ticket}',            [TicketController::class, 'destroy'])->name('tickets.destroy');
 
     // Adjuntos
     Route::post  ('/tickets/{ticket}/adjuntos',        [AdjuntoController::class, 'store'])->name('adjuntos.store');
@@ -60,32 +60,33 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/kb/{kbArticulo}', [KbController::class, 'show'])->name('kb.show');
 
     // Notificaciones
-    Route::get ('/notificaciones',                         [NotificacionController::class, 'index'])->name('notificaciones.index');
-    Route::get ('/notificaciones/no-leidas',               [NotificacionController::class, 'noLeidas'])->name('notificaciones.no-leidas');
-    Route::post('/notificaciones/leer-todas',              [NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.leer-todas');
-    Route::post('/notificaciones/{notificacion}/leer',     [NotificacionController::class, 'marcarLeida'])->name('notificaciones.leer');
+    Route::get ('/notificaciones',                     [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::get ('/notificaciones/no-leidas',           [NotificacionController::class, 'noLeidas'])->name('notificaciones.no-leidas');
+    Route::post('/notificaciones/leer-todas',          [NotificacionController::class, 'marcarTodasLeidas'])->name('notificaciones.leer-todas');
+    Route::post('/notificaciones/{notificacion}/leer', [NotificacionController::class, 'marcarLeida'])->name('notificaciones.leer');
 
     // Solo técnicos y administradores
     Route::middleware('gestores')->group(function () {
-        Route::get ('/mi-panel',                            [TecnicoController::class, 'panel'])->name('tecnico.panel');
-        Route::post('/tickets/{ticket}/estado',             [TicketController::class, 'cambiarEstado'])->name('tickets.estado');
-        Route::post('/tickets/{ticket}/asignar',            [TicketController::class, 'asignar'])->name('tickets.asignar');
-        Route::post('/tickets/{ticket}/prioridad',          [TicketController::class, 'cambiarPrioridad'])->name('tickets.prioridad');
-        Route::post('/tickets/{ticket}/estimar',            [TicketController::class, 'estimarAtencion'])->name('tickets.estimar');
-        Route::post('/tickets/{ticket}/vincular',           [TicketController::class, 'vincular'])->name('tickets.vincular');
+        Route::get ('/mi-panel',                                 [TecnicoController::class, 'panel'])->name('tecnico.panel');
+        Route::post('/tickets/{ticket}/gestionar',               [TicketController::class, 'gestionar'])->name('tickets.gestionar');
+        Route::post('/tickets/{ticket}/estado',                  [TicketController::class, 'cambiarEstado'])->name('tickets.estado');
+        Route::post('/tickets/{ticket}/asignar',                 [TicketController::class, 'asignar'])->name('tickets.asignar');
+        Route::post('/tickets/{ticket}/prioridad',               [TicketController::class, 'cambiarPrioridad'])->name('tickets.prioridad');
+        Route::post('/tickets/{ticket}/estimar',                 [TicketController::class, 'estimarAtencion'])->name('tickets.estimar');
+        Route::post('/tickets/{ticket}/vincular',                [TicketController::class, 'vincular'])->name('tickets.vincular');
         Route::delete('/tickets/{ticket}/desvincular/{vinculo}', [TicketController::class, 'desvincular'])->name('tickets.desvincular');
-        Route::post('/avisos',                              [AvisoTIController::class, 'store'])->name('avisos.store');
-        Route::delete('/avisos/{avisoTI}',                  [AvisoTIController::class, 'destroy'])->name('avisos.destroy');
-        Route::get ('/plantillas',                          [PlantillaController::class, 'index'])->name('plantillas.index');
-        Route::post('/plantillas',                          [PlantillaController::class, 'store'])->name('plantillas.store');
-        Route::put ('/plantillas/{plantilla}',              [PlantillaController::class, 'update'])->name('plantillas.update');
-        Route::delete('/plantillas/{plantilla}',            [PlantillaController::class, 'destroy'])->name('plantillas.destroy');
-        Route::get ('/plantillas/{plantilla}/datos',        [PlantillaController::class, 'datos'])->name('plantillas.datos');
-        Route::get ('/kb/admin/lista',                      [KbController::class, 'admin'])->name('kb.admin');
-        Route::post('/kb',                                  [KbController::class, 'store'])->name('kb.store');
-        Route::get ('/kb/{kbArticulo}/editar',              [KbController::class, 'edit'])->name('kb.edit');
-        Route::put ('/kb/{kbArticulo}',                     [KbController::class, 'update'])->name('kb.update');
-        Route::delete('/kb/{kbArticulo}',                   [KbController::class, 'destroy'])->name('kb.destroy');
+        Route::post('/avisos',                                   [AvisoTIController::class, 'store'])->name('avisos.store');
+        Route::delete('/avisos/{avisoTI}',                       [AvisoTIController::class, 'destroy'])->name('avisos.destroy');
+        Route::get ('/plantillas',                               [PlantillaController::class, 'index'])->name('plantillas.index');
+        Route::post('/plantillas',                               [PlantillaController::class, 'store'])->name('plantillas.store');
+        Route::put ('/plantillas/{plantilla}',                   [PlantillaController::class, 'update'])->name('plantillas.update');
+        Route::delete('/plantillas/{plantilla}',                 [PlantillaController::class, 'destroy'])->name('plantillas.destroy');
+        Route::get ('/plantillas/{plantilla}/datos',             [PlantillaController::class, 'datos'])->name('plantillas.datos');
+        Route::get ('/kb/admin/lista',                           [KbController::class, 'admin'])->name('kb.admin');
+        Route::post('/kb',                                       [KbController::class, 'store'])->name('kb.store');
+        Route::get ('/kb/{kbArticulo}/editar',                   [KbController::class, 'edit'])->name('kb.edit');
+        Route::put ('/kb/{kbArticulo}',                          [KbController::class, 'update'])->name('kb.update');
+        Route::delete('/kb/{kbArticulo}',                        [KbController::class, 'destroy'])->name('kb.destroy');
     });
 
     // Solo administradores

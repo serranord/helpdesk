@@ -54,9 +54,9 @@ class TicketController extends Controller {
             'prioridad'     => 'nullable|in:baja,media,alta,critica',
         ]);
 
-        $prioridad   = ($user->puedeGestionar() && $request->filled('prioridad')) ? $data['prioridad'] : 'media';
-        $categoria   = Categoria::find($data['categoria_id']);
-        $solicitante = $user->puedeGestionar() && $request->filled('solicitante_id') ? $data['solicitante_id'] : $user->id;
+        $prioridad     = ($user->puedeGestionar() && $request->filled('prioridad')) ? $data['prioridad'] : 'media';
+        $categoria     = Categoria::find($data['categoria_id']);
+        $solicitante   = $user->puedeGestionar() && $request->filled('solicitante_id') ? $data['solicitante_id'] : $user->id;
         $estadoInicial = ($user->puedeGestionar() && $request->filled('tecnico_id')) ? 'asignado' : 'nuevo';
 
         $ticket = Ticket::create([
@@ -81,9 +81,7 @@ class TicketController extends Controller {
             Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
         } catch (\Exception $e) {}
 
-        try {
-            (new TeamsService())->notificarTicketNuevo($ticket);
-        } catch (\Exception $e) {}
+        try { (new TeamsService())->notificarTicketNuevo($ticket); } catch (\Exception $e) {}
 
         return redirect()->route('tickets.show', $ticket)->with('success', "Ticket {$ticket->numero} creado correctamente.");
     }
@@ -93,13 +91,77 @@ class TicketController extends Controller {
         if ($user->esSolicitante() && $ticket->solicitante_id !== $user->id) abort(403);
 
         $ticket->load(['categoria','solicitante','tecnico','creadoPor','comentarios.usuario','calificacion','adjuntos.usuario','historial.usuario','hijosVinculados.hijo.solicitante','padreVinculado.padre']);
-        $tecnicos        = Usuario::where('estado','activo')->whereIn('rol',['tecnico','administrador'])->orderBy('nombre')->get();
-        $estados         = Ticket::estados();
+        $tecnicos = Usuario::where('estado','activo')->whereIn('rol',['tecnico','administrador'])->orderBy('nombre')->get();
+        $estados  = Ticket::estados();
         $ticketsVinculables = $user->puedeGestionar()
             ? Ticket::where('id','!=',$ticket->id)->whereNotIn('estado',['cerrado'])->whereDoesntHave('padreVinculado')->orderByDesc('created_at')->limit(50)->get()
             : collect();
 
         return view('tickets.show', compact('ticket','tecnicos','user','estados','ticketsVinculables'));
+    }
+
+    // ── GESTIÓN UNIFICADA ────────────────────────────────────────────────────
+    public function gestionar(Request $request, Ticket $ticket) {
+        $request->validate([
+            'estado'      => 'required|in:nuevo,abierto,asignado,en_proceso,pendiente,resuelto,cerrado',
+            'prioridad'   => 'required|in:baja,media,alta,critica',
+            'tecnico_id'  => 'nullable|exists:usuarios,id',
+            'estimado_en' => 'nullable|date',
+        ]);
+
+        $viejoEstado    = $ticket->estado_label;
+        $viejoPrioridad = $ticket->prioridad;
+        $viejoTecnico   = $ticket->tecnico_id;
+
+        $ticket->estado    = $request->estado;
+        $ticket->prioridad = $request->prioridad;
+        $ticket->tecnico_id = $request->tecnico_id;
+
+        if (in_array($request->estado, ['resuelto','cerrado'])) {
+            $ticket->fecha_resolucion = now();
+            $ticket->nota_cierre      = $request->nota_cierre;
+        }
+
+        if ($request->tecnico_id && in_array($ticket->estado, ['nuevo','abierto'])) {
+            $ticket->estado = 'asignado';
+        }
+
+        if ($request->filled('estimado_en')) {
+            $ticket->estimado_en = $request->estimado_en;
+        }
+
+        $ticket->save();
+        $ticket->load(['solicitante','tecnico','categoria']);
+
+        // Notificar cambio de estado
+        if ($viejoEstado !== $ticket->estado_label) {
+            if ($ticket->estado === 'resuelto') {
+                try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+                try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
+            } else {
+                try { (new TeamsService())->notificarCambioEstado($ticket, $viejoEstado); } catch (\Exception $e) {}
+            }
+            if ($ticket->solicitante_id !== auth()->id()) {
+                Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Estado actualizado','mensaje'=>"Tu solicitud {$ticket->numero} cambió a: {$ticket->estado_label}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+            }
+            HistorialTicket::registrar($ticket->id, 'estado', "Estado cambiado de '{$viejoEstado}' a '{$ticket->estado_label}'");
+        }
+
+        // Notificar cambio de técnico
+        if ($viejoTecnico !== $ticket->tecnico_id && $ticket->tecnico_id) {
+            Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket asignado','mensaje'=>"Se te asignó el ticket {$ticket->numero}: {$ticket->titulo}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+            try { (new TeamsService())->notificarTecnicoAsignado($ticket); } catch (\Exception $e) {}
+            HistorialTicket::registrar($ticket->id, 'asignacion', "Asignado a {$ticket->tecnico->nombre}");
+        }
+
+        // Notificar tiempo estimado
+        if ($request->filled('estimado_en')) {
+            Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Tiempo estimado de atención','mensaje'=>"Tu solicitud {$ticket->numero} será atendida el ".date('d/m/Y H:i', strtotime($request->estimado_en)),'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
+            HistorialTicket::registrar($ticket->id, 'estimacion', "Tiempo estimado: ".date('d/m/Y H:i', strtotime($request->estimado_en)));
+        }
+
+        ActividadLog::registrar('actualizó', 'tickets', "Actualizó ticket {$ticket->numero}", $ticket->numero);
+        return back()->with('success', 'Ticket actualizado correctamente.');
     }
 
     public function cambiarEstado(Request $request, Ticket $ticket) {
@@ -165,10 +227,9 @@ class TicketController extends Controller {
         $request->validate(['estimado_en' => 'required|date|after:now']);
         $ticket->estimado_en = $request->estimado_en;
         $ticket->save();
-
         Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Tiempo estimado de atención','mensaje'=>"Tu solicitud {$ticket->numero} será atendida aproximadamente el ".date('d/m/Y H:i', strtotime($request->estimado_en)),'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         HistorialTicket::registrar($ticket->id, 'estimacion', "Tiempo estimado: ".date('d/m/Y H:i', strtotime($request->estimado_en)));
-        return back()->with('success', 'Tiempo estimado establecido. El solicitante fue notificado.');
+        return back()->with('success', 'Tiempo estimado establecido.');
     }
 
     public function reabrir(Request $request, Ticket $ticket) {
@@ -176,8 +237,8 @@ class TicketController extends Controller {
         if ($ticket->solicitante_id !== $user->id) abort(403);
         if (!in_array($ticket->estado, ['resuelto','cerrado'])) return back()->with('error', 'Solo puedes reabrir tickets resueltos o cerrados.');
 
-        $ticket->estado    = 'abierto';
-        $ticket->reabierto = true;
+        $ticket->estado           = 'abierto';
+        $ticket->reabierto        = true;
         $ticket->fecha_resolucion = null;
         $ticket->save();
 
