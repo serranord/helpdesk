@@ -34,7 +34,6 @@ class TicketController extends Controller {
     }
 
     public function create() {
-        // Solicitantes solo ven categorías marcadas como visibles para usuario
         $categorias = auth()->user()->puedeGestionar()
             ? Categoria::where('activa', true)->get()
             : Categoria::where('activa', true)->where('visible_usuario', true)->get();
@@ -77,13 +76,11 @@ class TicketController extends Controller {
         ActividadLog::registrar('creó', 'tickets', "Creó ticket {$ticket->numero}", $ticket->numero);
         HistorialTicket::registrar($ticket->id, 'creado', 'Ticket creado');
 
-        // Correo de confirmación
         try {
             $ticket->load(['categoria','solicitante']);
             Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
         } catch (\Exception $e) {}
 
-        // Teams — notifica al canal con mención al solicitante
         try {
             (new TeamsService())->notificarTicketNuevo($ticket);
         } catch (\Exception $e) {}
@@ -116,16 +113,13 @@ class TicketController extends Controller {
         $ticket->save();
         $ticket->load(['solicitante','tecnico','categoria']);
 
-        // Correo si fue resuelto
         if ($request->estado === 'resuelto') {
             try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
             try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
         } else {
-            // Teams — notifica cambio de estado con mención al solicitante
             try { (new TeamsService())->notificarCambioEstado($ticket, $viejo); } catch (\Exception $e) {}
         }
 
-        // Notificación interna
         if ($ticket->solicitante_id !== auth()->id()) {
             Notificacion::create(['usuario_id'=>$ticket->solicitante_id,'tipo'=>'estado_cambiado','titulo'=>'Estado actualizado','mensaje'=>"Tu solicitud {$ticket->numero} cambió a: {$ticket->estado_label}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
@@ -144,12 +138,10 @@ class TicketController extends Controller {
 
         $nombre = $ticket->tecnico?->nombre ?? 'sin técnico';
 
-        // Notificación interna al técnico
         if ($ticket->tecnico_id && $ticket->tecnico_id !== auth()->id()) {
             Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket asignado','mensaje'=>"Se te asignó el ticket {$ticket->numero}: {$ticket->titulo}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
 
-        // Teams — notifica al solicitante que fue asignado
         if ($ticket->tecnico_id) {
             try { (new TeamsService())->notificarTecnicoAsignado($ticket); } catch (\Exception $e) {}
         }
@@ -232,7 +224,6 @@ class TicketController extends Controller {
             Notificacion::create(['usuario_id'=>$notificarA,'tipo'=>'comentario','titulo'=>'Nuevo comentario','mensaje'=>"Nuevo comentario en {$ticket->numero}",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);
         }
 
-        // Teams — notifica al solicitante cuando el técnico comenta
         if ($user->puedeGestionar() && !$esInterno) {
             try {
                 $ticket->load(['solicitante','tecnico','categoria']);
@@ -244,7 +235,6 @@ class TicketController extends Controller {
         ActividadLog::registrar('comentó', 'tickets', "Comentó en {$ticket->numero}", $ticket->numero);
         return back()->with('success', 'Actualización publicada.');
     }
-}
 
     // ── ELIMINAR TICKET ───────────────────────────────────────────────────────
     public function destroy(Ticket $ticket) {
@@ -253,7 +243,6 @@ class TicketController extends Controller {
         $numero = $ticket->numero;
         $titulo = $ticket->titulo;
 
-        // Eliminar adjuntos del disco
         foreach ($ticket->adjuntos as $adj) {
             $path = storage_path("app/adjuntos/ticket-{$ticket->id}/{$adj->nombre_guardado}");
             if (file_exists($path)) unlink($path);
@@ -263,3 +252,4 @@ class TicketController extends Controller {
         ActividadLog::registrar('eliminó', 'tickets', "Eliminó ticket {$numero}: {$titulo}");
         return redirect()->route('tickets.index')->with('success', "Ticket {$numero} eliminado correctamente.");
     }
+}
