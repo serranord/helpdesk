@@ -245,3 +245,21 @@ class TicketController extends Controller {
         return back()->with('success', 'Actualización publicada.');
     }
 }
+
+    // ── ELIMINAR TICKET ───────────────────────────────────────────────────────
+    public function destroy(Ticket $ticket) {
+        if (!auth()->user()->esAdministrador()) abort(403);
+
+        $numero = $ticket->numero;
+        $titulo = $ticket->titulo;
+
+        // Eliminar adjuntos del disco
+        foreach ($ticket->adjuntos as $adj) {
+            $path = storage_path("app/adjuntos/ticket-{$ticket->id}/{$adj->nombre_guardado}");
+            if (file_exists($path)) unlink($path);
+        }
+
+        $ticket->delete();
+        ActividadLog::registrar('eliminó', 'tickets', "Eliminó ticket {$numero}: {$titulo}");
+        return redirect()->route('tickets.index')->with('success', "Ticket {$numero} eliminado correctamente.");
+    }

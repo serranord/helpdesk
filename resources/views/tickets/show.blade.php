@@ -385,6 +385,23 @@
                 @endforelse
             </div>
         </div>
+
+        {{-- Eliminar ticket (solo admin) --}}
+        @if(auth()->user()->esAdministrador())
+        <div class="card" style="border-color:#fca5a5">
+            <div class="section-title" style="color:var(--red-status)">⚠️ Zona de peligro</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+                Eliminar este ticket es una acción permanente e irreversible. Se eliminarán también todos los comentarios, adjuntos e historial.
+            </div>
+            <form action="{{ route('tickets.destroy',$ticket) }}" method="POST"
+                  onsubmit="return confirm('¿Estás seguro de eliminar el ticket {{ $ticket->numero }}? Esta acción no se puede deshacer.')">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-sm" style="width:100%">
+                    🗑️ Eliminar ticket permanentemente
+                </button>
+            </form>
+        </div>
+        @endif
         @endif
     </div>
 </div>

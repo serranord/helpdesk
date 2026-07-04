@@ -55,6 +55,7 @@
                     <th>Técnico</th>
                     <th>SLA</th>
                     <th>Fecha</th>
+                    @if(auth()->user()->esAdministrador())<th></th>@endif
                 </tr>
             </thead>
             <tbody>
@@ -86,6 +87,15 @@
                         @endif
                     </td>
                     <td><span class="text-muted mono">{{ $t->created_at->format('d/m/y') }}</span></td>
+                    @if(auth()->user()->esAdministrador())
+                    <td>
+                        <form action="{{ route('tickets.destroy',$t) }}" method="POST"
+                              onsubmit="return confirm('¿Eliminar {{ $t->numero }}? Acción irreversible.')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                        </form>
+                    </td>
+                    @endif
                 </tr>
                 @endforeach
             </tbody>

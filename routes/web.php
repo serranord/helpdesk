@@ -47,7 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get ('/tickets/{ticket}',              [TicketController::class, 'show'])->name('tickets.show');
     Route::post('/tickets/{ticket}/comentar',     [TicketController::class, 'comentar'])->name('tickets.comentar');
     Route::post('/tickets/{ticket}/calificar',    [CalificacionController::class, 'store'])->name('tickets.calificar');
-    Route::post('/tickets/{ticket}/reabrir',      [TicketController::class, 'reabrir'])->name('tickets.reabrir');
+    Route::post  ('/tickets/{ticket}/reabrir',    [TicketController::class, 'reabrir'])->name('tickets.reabrir');
+    Route::delete('/tickets/{ticket}',             [TicketController::class, 'destroy'])->name('tickets.destroy');
 
     // Adjuntos
     Route::post  ('/tickets/{ticket}/adjuntos',        [AdjuntoController::class, 'store'])->name('adjuntos.store');
