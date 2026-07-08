@@ -49,18 +49,21 @@ class TicketApiController extends Controller
 
         $data = $validator->validated();
 
-        // Solicitante: buscar por correo, o crearlo si no existe (usuario "ligero" sin acceso por password aún)
-        // firstOrCreate es atómico: evita el error de "duplicate entry" si el usuario ya existía
+        // Solicitante: buscar por correo (incluyendo borrados), crear si no existe, o restaurar si estaba borrado
         $correo = strtolower(trim($data['solicitante_email']));
-        $solicitante = Usuario::firstOrCreate(
-            ['correo' => $correo],
-            [
+        $solicitante = Usuario::withTrashed()->where('correo', $correo)->first();
+
+        if (!$solicitante) {
+            $solicitante = Usuario::create([
+                'correo'   => $correo,
                 'nombre'   => $data['solicitante_nombre'] ?? Str::before($correo, '@'),
                 'password' => Hash::make(Str::random(32)),
                 'rol'      => 'solicitante',
                 'estado'   => 'activo',
-            ]
-        );
+            ]);
+        } elseif ($solicitante->trashed()) {
+            $solicitante->restore();
+        }
 
         // Categoría: la indicada, o "Interno TI" como respaldo si el agente no pudo clasificarla
         $categoria = isset($data['categoria_id'])
