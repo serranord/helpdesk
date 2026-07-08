@@ -2,13 +2,112 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActividadLog;
+use App\Models\Categoria;
+use App\Models\HistorialTicket;
 use App\Models\Ticket;
 use App\Models\Usuario;
+use App\Mail\TicketCreado;
+use App\Services\TeamsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class TicketApiController extends Controller
 {
+    // Listar categorías activas — para que el agente elija la correcta antes de crear el ticket
+    public function categorias(): JsonResponse
+    {
+        return response()->json(
+            Categoria::where('activa', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'descripcion', 'sla_horas'])
+        );
+    }
+
+    // Crear ticket — usado por el agente de Copilot tras la aprobación en Teams
+    public function store(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'titulo'             => 'required|string|max:255',
+            'descripcion'        => 'required|string',
+            'solicitante_email'  => 'required|email',
+            'solicitante_nombre' => 'nullable|string|max:255',
+            'categoria_id'       => 'nullable|integer|exists:categorias,id',
+            'prioridad'          => 'nullable|in:baja,media,alta,critica',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        // Solicitante: buscar por correo, o crearlo si no existe (usuario "ligero" sin acceso por password aún)
+        $solicitante = Usuario::where('correo', strtolower($data['solicitante_email']))->first();
+        if (!$solicitante) {
+            $solicitante = Usuario::create([
+                'nombre'   => $data['solicitante_nombre'] ?? Str::before($data['solicitante_email'], '@'),
+                'correo'   => strtolower($data['solicitante_email']),
+                'password' => Hash::make(Str::random(32)),
+                'rol'      => 'solicitante',
+                'estado'   => 'activo',
+            ]);
+        }
+
+        // Categoría: la indicada, o "Interno TI" como respaldo si el agente no pudo clasificarla
+        $categoria = isset($data['categoria_id'])
+            ? Categoria::find($data['categoria_id'])
+            : Categoria::where('nombre', 'Interno TI')->first() ?? Categoria::first();
+
+        if (!$categoria) {
+            return response()->json([
+                'success' => false,
+                'mensaje' => 'No hay categorías configuradas en el sistema.',
+            ], 422);
+        }
+
+        $ticket = Ticket::create([
+            'numero'         => Ticket::generarNumero(),
+            'titulo'         => $data['titulo'],
+            'descripcion'    => $data['descripcion'],
+            'prioridad'      => $data['prioridad'] ?? 'media',
+            'categoria_id'   => $categoria->id,
+            'solicitante_id' => $solicitante->id,
+            'tecnico_id'     => null,
+            'creado_por'     => $solicitante->id,
+            'origen'         => 'copilot',
+            'estado'         => 'nuevo',
+            'fecha_limite'   => now()->addHours($categoria->sla_horas),
+        ]);
+
+        ActividadLog::registrar('creó', 'tickets', "Copilot creó ticket {$ticket->numero} desde correo entrante", $ticket->numero);
+        HistorialTicket::registrar($ticket->id, 'creado', 'Ticket creado automáticamente por el agente de Copilot desde un correo, previa aprobación en Teams');
+
+        $ticket->load(['categoria', 'solicitante']);
+
+        try {
+            Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
+        } catch (\Exception $e) {}
+
+        try {
+            (new TeamsService())->notificarTicketNuevo($ticket);
+        } catch (\Exception $e) {}
+
+        return response()->json([
+            'success'   => true,
+            'ticket_id' => $ticket->id,
+            'numero'    => $ticket->numero,
+            'url'       => config('app.url') . '/tickets/' . $ticket->id,
+        ], 201);
+    }
+
     // Consultar ticket por número — para Power Automate / Copilot
     public function porNumero(string $numero): JsonResponse
     {

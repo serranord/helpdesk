@@ -14,4 +14,10 @@ Route::middleware(\App\Http\Middleware\ApiTokenMiddleware::class)->group(functio
 
     // Estadísticas generales
     Route::get('/estadisticas', [TicketApiController::class, 'estadisticas']);
+
+    // Listar categorías activas (para que el agente de Copilot elija antes de crear)
+    Route::get('/categorias', [TicketApiController::class, 'categorias']);
+
+    // Crear ticket — usado por el agente de Copilot tras la aprobación en Teams
+    Route::post('/tickets', [TicketApiController::class, 'store']);
 });
