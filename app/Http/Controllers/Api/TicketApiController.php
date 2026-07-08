@@ -49,7 +49,8 @@ class TicketApiController extends Controller
 
         $data = $validator->validated();
 
-        // Solicitante: buscar por correo (incluyendo borrados), crear si no existe, o restaurar si estaba borrado
+        // Solicitante: buscar por correo (incluyendo borrados). Si no existe, crear un usuario real automáticamente
+        // (asi el ticket queda bien atribuido y se acumula historial si esa persona vuelve a escribir).
         $correo = strtolower(trim($data['solicitante_email']));
         $solicitante = Usuario::withTrashed()->where('correo', $correo)->first();
 
