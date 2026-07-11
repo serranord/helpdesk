@@ -57,6 +57,30 @@
                 </div>
             </div>
 
+            {{-- SLA por prioridad --}}
+            <div style="margin-bottom:20px">
+                <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">⏱️ SLA por prioridad (horas)</div>
+                <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px">Tiempo límite para resolver un ticket según su prioridad. Se aplica al crear cualquier ticket, sin importar la categoría.</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+                    <div class="form-group">
+                        <label class="form-label">🟢 Baja</label>
+                        <input type="number" name="sla_baja" class="form-control" min="1" value="{{ old('sla_baja', $sla['baja']) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🟡 Media</label>
+                        <input type="number" name="sla_media" class="form-control" min="1" value="{{ old('sla_media', $sla['media']) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🟠 Alta</label>
+                        <input type="number" name="sla_alta" class="form-control" min="1" value="{{ old('sla_alta', $sla['alta']) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔴 Crítica</label>
+                        <input type="number" name="sla_critica" class="form-control" min="1" value="{{ old('sla_critica', $sla['critica']) }}" required>
+                    </div>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary">Guardar configuración</button>
         </form>
     </div>

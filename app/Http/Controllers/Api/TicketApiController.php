@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ActividadLog;
 use App\Models\Categoria;
+use App\Models\Configuracion;
 use App\Models\HistorialTicket;
 use App\Models\Ticket;
 use App\Models\Usuario;
@@ -78,18 +79,20 @@ class TicketApiController extends Controller
             ], 422);
         }
 
+        $prioridad = $data['prioridad'] ?? 'media';
+
         $ticket = Ticket::create([
             'numero'         => Ticket::generarNumero(),
             'titulo'         => $data['titulo'],
             'descripcion'    => $data['descripcion'],
-            'prioridad'      => $data['prioridad'] ?? 'media',
+            'prioridad'      => $prioridad,
             'categoria_id'   => $categoria->id,
             'solicitante_id' => $solicitante->id,
             'tecnico_id'     => null,
             'creado_por'     => $solicitante->id,
             'origen'         => 'copilot',
             'estado'         => 'nuevo',
-            'fecha_limite'   => now()->addHours($categoria->sla_horas),
+            'fecha_limite'   => now()->addHours(Configuracion::slaHorasPara($prioridad)),
         ]);
 
         ActividadLog::registrar('creó', 'tickets', "Copilot creó ticket {$ticket->numero} desde correo entrante", $ticket->numero);

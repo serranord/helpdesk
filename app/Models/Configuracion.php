@@ -22,4 +22,24 @@ class Configuracion extends Model {
     public static function soloSSO(): bool {
         return static::get('solo_sso', '0') === '1';
     }
+
+    // SLA (en horas) configurable por el administrador, según la prioridad del ticket
+    public static function slaPorPrioridad(): array {
+        $default = ['baja' => 72, 'media' => 48, 'alta' => 24, 'critica' => 4];
+        $guardado = json_decode(static::get('sla_por_prioridad', ''), true);
+        return is_array($guardado) ? array_merge($default, $guardado) : $default;
+    }
+
+    public static function setSlaPorPrioridad(array $horas): void {
+        static::set('sla_por_prioridad', json_encode([
+            'baja'    => (int) ($horas['baja'] ?? 72),
+            'media'   => (int) ($horas['media'] ?? 48),
+            'alta'    => (int) ($horas['alta'] ?? 24),
+            'critica' => (int) ($horas['critica'] ?? 4),
+        ]));
+    }
+
+    public static function slaHorasPara(string $prioridad): int {
+        return static::slaPorPrioridad()[$prioridad] ?? 48;
+    }
 }

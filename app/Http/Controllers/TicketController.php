@@ -70,7 +70,7 @@ class TicketController extends Controller {
             'creado_por'     => $user->id,
             'origen'         => $user->esSolicitante() ? 'usuario' : 'tecnico',
             'estado'         => $estadoInicial,
-            'fecha_limite'   => now()->addHours($categoria->sla_horas),
+            'fecha_limite'   => now()->addHours(\App\Models\Configuracion::slaHorasPara($prioridad)),
         ]);
 
         ActividadLog::registrar('creó', 'tickets', "Creó ticket {$ticket->numero}", $ticket->numero);
