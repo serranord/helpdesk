@@ -344,11 +344,25 @@
                     </select>
                 </div>
 
-                <div class="form-group" style="margin-bottom:16px">
+                <div class="form-group" style="margin-bottom:14px">
                     <label class="form-label">🕐 Tiempo estimado de atención</label>
                     <input type="datetime-local" name="estimado_en" class="form-control"
                         value="{{ $ticket->estimado_en?->format('Y-m-d\TH:i') }}">
                     <div class="form-hint">El solicitante verá esta fecha y recibirá una notificación.</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">⏱️ SLA / Fecha límite</label>
+                    <input type="datetime-local" name="fecha_limite" class="form-control"
+                        value="{{ $ticket->fecha_limite?->format('Y-m-d\TH:i') }}">
+                    <div class="form-hint">Ajusta manualmente el SLA de este ticket en particular.</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:16px">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="no_enviar_correo" value="1">
+                        No enviar correo de notificación en este cambio
+                    </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width:100%">💾 Guardar cambios</button>

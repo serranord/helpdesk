@@ -8,12 +8,14 @@ class Ticket extends Model {
         'numero','titulo','descripcion','prioridad','estado','origen',
         'categoria_id','solicitante_id','tecnico_id','creado_por',
         'fecha_limite','estimado_en','fecha_resolucion','nota_cierre','reabierto',
+        'trabajando_hoy',
     ];
     protected $casts = [
         'fecha_limite'     => 'datetime',
         'estimado_en'      => 'datetime',
         'fecha_resolucion' => 'datetime',
         'reabierto'        => 'boolean',
+        'trabajando_hoy'   => 'boolean',
     ];
 
     public function categoria()    { return $this->belongsTo(Categoria::class); }

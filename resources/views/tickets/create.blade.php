@@ -30,7 +30,7 @@
     </div>
     @endif
 
-    <form action="{{ route('tickets.store') }}" method="POST">
+    <form action="{{ route('tickets.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div style="display:flex;flex-direction:column;gap:18px">
 
@@ -58,6 +58,13 @@
                 <label class="form-label">Descripción detallada <span class="required">*</span></label>
                 <textarea name="descripcion" id="f-descripcion" class="form-control" rows="6" required
                     placeholder="Explica con detalle:&#10;- ¿Qué está pasando?&#10;- ¿Desde cuándo?&#10;- ¿Qué intentaste hacer?">{{ old('descripcion') }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Archivos adjuntos (opcional)</label>
+                <input type="file" name="archivos[]" class="form-control" multiple
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
+                <div class="form-hint">Hasta 5 archivos, máximo 10MB cada uno.</div>
             </div>
 
             @if(auth()->user()->puedeGestionar())
@@ -91,6 +98,17 @@
                             <option value="critica">🔴 Crítica</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">SLA / Fecha límite (opcional)</label>
+                        <input type="datetime-local" name="fecha_limite" class="form-control" value="{{ old('fecha_limite') }}">
+                        <div class="form-hint">Si lo dejas vacío, se calcula automáticamente según la prioridad.</div>
+                    </div>
+                </div>
+                <div style="margin-top:14px">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="no_enviar_correo" value="1" @checked(old('no_enviar_correo'))>
+                        No enviar correo de notificación al solicitante en esta ocasión
+                    </label>
                 </div>
             </div>
             @endif

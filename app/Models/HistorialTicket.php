@@ -29,6 +29,7 @@ class HistorialTicket extends Model {
             'prioridad'  => '🚨',
             'comentario' => '💬',
             'resolucion' => '✅',
+            'sla'        => '⏱️',
             default      => '📝',
         };
     }

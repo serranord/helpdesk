@@ -52,12 +52,22 @@ class TicketController extends Controller {
             'solicitante_id'=> 'nullable|exists:usuarios,id',
             'tecnico_id'    => 'nullable|exists:usuarios,id',
             'prioridad'     => 'nullable|in:baja,media,alta,critica',
+            'fecha_limite'  => 'nullable|date',
+            'archivos'      => 'nullable|array|max:5',
+            'archivos.*'    => 'file|max:10240|mimes:jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,txt,zip',
         ]);
 
         $prioridad     = ($user->puedeGestionar() && $request->filled('prioridad')) ? $data['prioridad'] : 'media';
         $categoria     = Categoria::find($data['categoria_id']);
         $solicitante   = $user->puedeGestionar() && $request->filled('solicitante_id') ? $data['solicitante_id'] : $user->id;
         $estadoInicial = ($user->puedeGestionar() && $request->filled('tecnico_id')) ? 'asignado' : 'nuevo';
+
+        // SLA: si el gestor lo indicó manualmente, se respeta; si no, se calcula por prioridad
+        $fechaLimite = ($user->puedeGestionar() && $request->filled('fecha_limite'))
+            ? \Carbon\Carbon::parse($data['fecha_limite'])
+            : now()->addHours(\App\Models\Configuracion::slaHorasPara($prioridad));
+
+        $noEnviarCorreo = $user->puedeGestionar() && $request->boolean('no_enviar_correo');
 
         $ticket = Ticket::create([
             'numero'         => Ticket::generarNumero(),
@@ -70,16 +80,36 @@ class TicketController extends Controller {
             'creado_por'     => $user->id,
             'origen'         => $user->esSolicitante() ? 'usuario' : 'tecnico',
             'estado'         => $estadoInicial,
-            'fecha_limite'   => now()->addHours(\App\Models\Configuracion::slaHorasPara($prioridad)),
+            'fecha_limite'   => $fechaLimite,
         ]);
+
+        // Adjuntos subidos junto con la creación del ticket
+        if ($request->hasFile('archivos')) {
+            foreach ($request->file('archivos') as $file) {
+                $nombre = \Illuminate\Support\Str::uuid().'.'.$file->getClientOriginalExtension();
+                $file->storeAs("adjuntos/ticket-{$ticket->id}", $nombre, 'local');
+                \App\Models\Adjunto::create([
+                    'ticket_id'       => $ticket->id,
+                    'usuario_id'      => $user->id,
+                    'nombre_original' => $file->getClientOriginalName(),
+                    'nombre_guardado' => $nombre,
+                    'mime_type'       => $file->getMimeType(),
+                    'tamano'          => $file->getSize(),
+                ]);
+            }
+        }
 
         ActividadLog::registrar('creó', 'tickets', "Creó ticket {$ticket->numero}", $ticket->numero);
         HistorialTicket::registrar($ticket->id, 'creado', 'Ticket creado');
 
-        try {
+        if (!$noEnviarCorreo) {
+            try {
+                $ticket->load(['categoria','solicitante']);
+                Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
+            } catch (\Exception $e) {}
+        } else {
             $ticket->load(['categoria','solicitante']);
-            Mail::to($ticket->solicitante->correo)->send(new TicketCreado($ticket));
-        } catch (\Exception $e) {}
+        }
 
         try { (new TeamsService())->notificarTicketNuevo($ticket); } catch (\Exception $e) {}
 
@@ -100,6 +130,34 @@ class TicketController extends Controller {
         return view('tickets.show', compact('ticket','tecnicos','user','estados','ticketsVinculables'));
     }
 
+    // ── TRABAJANDO HOY ───────────────────────────────────────────────────────
+    public function trabajandoHoy() {
+        if (!auth()->user()->esAdministrador()) abort(403);
+
+        $seleccionados = Ticket::with(['categoria','solicitante','tecnico'])
+            ->where('trabajando_hoy', true)
+            ->whereNotIn('estado', ['cerrado'])
+            ->orderByDesc('prioridad')
+            ->get();
+
+        $disponibles = Ticket::with(['categoria','solicitante','tecnico'])
+            ->where('trabajando_hoy', false)
+            ->whereNotIn('estado', ['cerrado'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('tickets.trabajando-hoy', compact('seleccionados','disponibles'));
+    }
+
+    public function toggleTrabajandoHoy(Ticket $ticket) {
+        if (!auth()->user()->esAdministrador()) abort(403);
+        $ticket->trabajando_hoy = !$ticket->trabajando_hoy;
+        $ticket->save();
+        return back()->with('success', $ticket->trabajando_hoy
+            ? "Ticket {$ticket->numero} agregado a Trabajando Hoy."
+            : "Ticket {$ticket->numero} quitado de Trabajando Hoy.");
+    }
+
     // ── GESTIÓN UNIFICADA ────────────────────────────────────────────────────
     public function gestionar(Request $request, Ticket $ticket) {
         $request->validate([
@@ -107,11 +165,14 @@ class TicketController extends Controller {
             'prioridad'   => 'required|in:baja,media,alta,critica',
             'tecnico_id'  => 'nullable|exists:usuarios,id',
             'estimado_en' => 'nullable|date',
+            'fecha_limite'=> 'nullable|date',
         ]);
 
         $viejoEstado    = $ticket->estado_label;
         $viejoPrioridad = $ticket->prioridad;
         $viejoTecnico   = $ticket->tecnico_id;
+        $viejaFechaLimite = $ticket->fecha_limite;
+        $noEnviarCorreo = $request->boolean('no_enviar_correo');
 
         $ticket->estado    = $request->estado;
         $ticket->prioridad = $request->prioridad;
@@ -130,13 +191,24 @@ class TicketController extends Controller {
             $ticket->estimado_en = $request->estimado_en;
         }
 
+        // SLA: el administrador puede ajustar manualmente la fecha límite del ticket
+        if ($request->filled('fecha_limite')) {
+            $ticket->fecha_limite = \Carbon\Carbon::parse($request->fecha_limite);
+        }
+
         $ticket->save();
         $ticket->load(['solicitante','tecnico','categoria']);
+
+        if ($ticket->fecha_limite != $viejaFechaLimite) {
+            HistorialTicket::registrar($ticket->id, 'sla', "SLA ajustado manualmente a ".$ticket->fecha_limite->format('d/m/Y H:i'));
+        }
 
         // Notificar cambio de estado
         if ($viejoEstado !== $ticket->estado_label) {
             if ($ticket->estado === 'resuelto') {
-                try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+                if (!$noEnviarCorreo) {
+                    try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+                }
                 try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
             } else {
                 try { (new TeamsService())->notificarCambioEstado($ticket, $viejoEstado); } catch (\Exception $e) {}
@@ -167,6 +239,7 @@ class TicketController extends Controller {
     public function cambiarEstado(Request $request, Ticket $ticket) {
         $request->validate(['estado' => 'required|in:nuevo,abierto,asignado,en_proceso,pendiente,resuelto,cerrado']);
         $viejo = $ticket->estado_label;
+        $noEnviarCorreo = $request->boolean('no_enviar_correo');
         $ticket->estado = $request->estado;
         if (in_array($request->estado, ['resuelto','cerrado'])) {
             $ticket->fecha_resolucion = now();
@@ -176,7 +249,9 @@ class TicketController extends Controller {
         $ticket->load(['solicitante','tecnico','categoria']);
 
         if ($request->estado === 'resuelto') {
-            try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+            if (!$noEnviarCorreo) {
+                try { Mail::to($ticket->solicitante->correo)->send(new TicketResuelto($ticket)); } catch (\Exception $e) {}
+            }
             try { (new TeamsService())->notificarResuelto($ticket); } catch (\Exception $e) {}
         } else {
             try { (new TeamsService())->notificarCambioEstado($ticket, $viejo); } catch (\Exception $e) {}

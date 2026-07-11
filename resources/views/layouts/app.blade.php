@@ -78,6 +78,17 @@
 
         @if(auth()->user()->puedeGestionar())
         <div class="nav-section">Gestión TI</div>
+        @if(auth()->user()->esAdministrador())
+        <a href="{{ route('tickets.trabajando-hoy') }}" class="nav-item {{ request()->routeIs('tickets.trabajando-hoy') ? 'active' : '' }}">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 14l2 2 4-4"/></svg>
+            Trabajando Hoy
+            @php $trabajandoHoyCount = \App\Models\Ticket::where('trabajando_hoy', true)->whereNotIn('estado',['cerrado'])->count(); @endphp
+            @if($trabajandoHoyCount > 0)
+            <span style="background:var(--cyan);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:auto">{{ $trabajandoHoyCount }}</span>
+            @endif
+        </a>
+        @endif
+
         <a href="{{ route('tecnico.panel') }}" class="nav-item {{ request()->routeIs('tecnico.panel') ? 'active' : '' }}">
             <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             Mi Panel
