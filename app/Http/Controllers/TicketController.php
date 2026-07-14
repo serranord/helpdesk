@@ -19,7 +19,11 @@ class TicketController extends Controller {
         elseif ($user->esTecnico())
             $query->where(fn($q) => $q->where('tecnico_id', $user->id)->orWhereNull('tecnico_id'));
 
-        if ($request->filled('estado'))    $query->where('estado', $request->estado);
+        if ($request->estado === '__abiertos__') {
+            $query->whereNotIn('estado', ['resuelto','cerrado']);
+        } elseif ($request->filled('estado')) {
+            $query->where('estado', $request->estado);
+        }
         if ($request->filled('prioridad')) $query->where('prioridad', $request->prioridad);
         if ($request->filled('categoria')) $query->where('categoria_id', $request->categoria);
         if ($request->filled('buscar'))    $query->where(fn($q) =>
@@ -64,8 +68,8 @@ class TicketController extends Controller {
 
         // SLA: si el gestor lo indicó manualmente, se respeta; si no, se calcula por prioridad
         $fechaLimite = ($user->puedeGestionar() && $request->filled('fecha_limite'))
-            ? \Carbon\Carbon::parse($data['fecha_limite'])
-            : now()->addHours(\App\Models\Configuracion::slaHorasPara($prioridad));
+            ? \App\Services\SlaCalculator::ajustarSiCaeEnFinDeSemana(\Carbon\Carbon::parse($data['fecha_limite']))
+            : \App\Services\SlaCalculator::agregarHorasLaborables(now(), \App\Models\Configuracion::slaHorasPara($prioridad));
 
         $noEnviarCorreo = $user->puedeGestionar() && $request->boolean('no_enviar_correo');
 
@@ -193,7 +197,7 @@ class TicketController extends Controller {
 
         // SLA: el administrador puede ajustar manualmente la fecha límite del ticket
         if ($request->filled('fecha_limite')) {
-            $ticket->fecha_limite = \Carbon\Carbon::parse($request->fecha_limite);
+            $ticket->fecha_limite = \App\Services\SlaCalculator::ajustarSiCaeEnFinDeSemana(\Carbon\Carbon::parse($request->fecha_limite));
         }
 
         $ticket->save();

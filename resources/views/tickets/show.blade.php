@@ -282,6 +282,11 @@
                     <p style="{{ $ticket->estaVencido() ? 'color:var(--red);font-weight:600' : '' }}">
                         {{ $ticket->fecha_limite->format('d/m/Y H:i') }} @if($ticket->estaVencido()) ⚠️@endif
                     </p>
+                    @if($ticket->enPausaPorFinDeSemana())
+                    <p style="margin-top:4px">
+                        <span class="badge" style="background:#e2e8f0;color:#475569">⏸️ SLA en pausa (fin de semana)</span>
+                    </p>
+                    @endif
                 </div>
                 @endif
             </div>

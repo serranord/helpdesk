@@ -42,4 +42,9 @@ class Configuracion extends Model {
     public static function slaHorasPara(string $prioridad): int {
         return static::slaPorPrioridad()[$prioridad] ?? 48;
     }
+
+    // Si está activo, el SLA (automático o manual) salta sábados y domingos
+    public static function saltarFinesSemana(): bool {
+        return static::get('sla_saltar_fines_semana', '1') === '1';
+    }
 }

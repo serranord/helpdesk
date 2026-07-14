@@ -34,6 +34,11 @@ class Ticket extends Model {
             && !in_array($this->estado, ['resuelto','cerrado']);
     }
 
+    public function enPausaPorFinDeSemana(): bool {
+        return \App\Services\SlaCalculator::enPausaHoy()
+            && !in_array($this->estado, ['resuelto','cerrado']);
+    }
+
     public static function estados(): array {
         return [
             'nuevo'      => 'Nuevo',

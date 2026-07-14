@@ -13,6 +13,7 @@
     <input type="text" name="buscar" class="form-control" placeholder="Buscar número o título..." value="{{ request('buscar') }}" style="min-width:200px">
     <select name="estado" class="form-control">
         <option value="">Todos los estados</option>
+        <option value="__abiertos__" @selected(request('estado')==='__abiertos__')>🟢 Todos (excepto resueltos/cerrados)</option>
         @foreach($estados as $key => $label)
         <option value="{{ $key }}" @selected(request('estado')===$key)>{{ $label }}</option>
         @endforeach
@@ -81,6 +82,9 @@
                                 <span class="badge badge-red">Vencido</span>
                             @else
                                 <span style="font-size:12px;color:var(--text-muted)">{{ $t->fecha_limite->diffForHumans() }}</span>
+                                @if($t->enPausaPorFinDeSemana())
+                                    <br><span style="font-size:11px;color:#64748b">⏸️ en pausa</span>
+                                @endif
                             @endif
                         @else
                             <span style="color:var(--text-muted)">—</span>

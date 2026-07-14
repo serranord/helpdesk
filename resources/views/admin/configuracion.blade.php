@@ -79,6 +79,12 @@
                         <input type="number" name="sla_critica" class="form-control" min="1" value="{{ old('sla_critica', $sla['critica']) }}" required>
                     </div>
                 </div>
+                <div style="margin-top:12px">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="sla_saltar_fines_semana" value="1" @checked($slaSaltarFinesSemana)>
+                        Saltar sábados y domingos en el cálculo del SLA (fines de semana no cuentan, ni en el automático ni al ponerlo manualmente)
+                    </label>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary">Guardar configuración</button>

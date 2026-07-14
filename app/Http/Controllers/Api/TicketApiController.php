@@ -92,7 +92,7 @@ class TicketApiController extends Controller
             'creado_por'     => $solicitante->id,
             'origen'         => 'copilot',
             'estado'         => 'nuevo',
-            'fecha_limite'   => now()->addHours(Configuracion::slaHorasPara($prioridad)),
+            'fecha_limite'   => \App\Services\SlaCalculator::agregarHorasLaborables(now(), Configuracion::slaHorasPara($prioridad)),
         ]);
 
         ActividadLog::registrar('creó', 'tickets', "Copilot creó ticket {$ticket->numero} desde correo entrante", $ticket->numero);

@@ -10,12 +10,14 @@ class ConfiguracionController extends Controller {
         $configs = Configuracion::all()->keyBy('clave');
         $menus   = MenuAplicacion::orderBy('orden')->get();
         $sla     = Configuracion::slaPorPrioridad();
-        return view('admin.configuracion', compact('configs','menus','sla'));
+        $slaSaltarFinesSemana = Configuracion::saltarFinesSemana();
+        return view('admin.configuracion', compact('configs','menus','sla','slaSaltarFinesSemana'));
     }
 
     public function update(Request $request) {
         Configuracion::set('registro_habilitado', $request->boolean('registro_habilitado') ? '1' : '0');
         Configuracion::set('solo_sso',            $request->boolean('solo_sso') ? '1' : '0');
+        Configuracion::set('sla_saltar_fines_semana', $request->boolean('sla_saltar_fines_semana') ? '1' : '0');
 
         if ($request->filled('sla_baja') || $request->filled('sla_media') || $request->filled('sla_alta') || $request->filled('sla_critica')) {
             $request->validate([
