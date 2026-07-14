@@ -69,7 +69,7 @@ class Ticket extends Model {
         return match($this->estado) {
             'nuevo'      => 'cyan',
             'abierto'    => 'blue',
-            'asignado'   => 'purple',
+            'asignado'   => 'rose',
             'en_proceso' => 'orange',
             'pendiente'  => 'amber',
             'resuelto'   => 'green',

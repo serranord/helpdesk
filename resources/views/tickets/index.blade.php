@@ -9,11 +9,42 @@
 @endsection
 @section('content')
 
+<div class="stats-grid stats-grid-5">
+    <a href="{{ route('tickets.index',['estado'=>'nuevo']) }}" class="stat-card">
+        <div class="stat-label">Nuevos</div>
+        <div class="stat-value">{{ $resumen['nuevos'] }}</div>
+        <div class="stat-sub">Ver detalles</div>
+    </a>
+    <a href="{{ route('tickets.index',['estado'=>'__abiertos__']) }}" class="stat-card">
+        <div class="stat-label">Asignados a mí</div>
+        <div class="stat-value">{{ $resumen['asignados_a_mi'] }}</div>
+        <div class="stat-sub">Ver detalles</div>
+    </a>
+    <a href="{{ route('tickets.index',['estado'=>'pendiente']) }}" class="stat-card">
+        <div class="stat-label">Pendientes</div>
+        <div class="stat-value">{{ $resumen['pendientes'] }}</div>
+        <div class="stat-sub">Ver detalles</div>
+    </a>
+    <a href="{{ route('tickets.index',['estado'=>'__abiertos__']) }}" class="stat-card" style="border-top-color:var(--red-status)">
+        <div class="stat-label">SLA por vencer</div>
+        <div class="stat-value" style="color:var(--red-status)">{{ $resumen['sla_por_vencer'] }}</div>
+        <div class="stat-sub">Ver detalles</div>
+    </a>
+    <a href="{{ route('tickets.index',['estado'=>'cerrado']) }}" class="stat-card">
+        <div class="stat-label">Cerrados (mes)</div>
+        <div class="stat-value">{{ $resumen['cerrados_mes'] }}</div>
+        <div class="stat-sub">Ver detalles</div>
+    </a>
+</div>
+
 <form method="GET" class="filtros">
-    <input type="text" name="buscar" class="form-control" placeholder="Buscar número o título..." value="{{ request('buscar') }}" style="min-width:200px">
+    <div class="filtro-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" name="buscar" class="form-control" placeholder="Buscar número o título..." value="{{ request('buscar') }}">
+    </div>
     <select name="estado" class="form-control">
         <option value="">Todos los estados</option>
-        <option value="__abiertos__" @selected(request('estado')==='__abiertos__')>🟢 Todos (excepto resueltos/cerrados)</option>
+        <option value="__abiertos__" @selected(request('estado')==='__abiertos__')>Todos (excepto resueltos/cerrados)</option>
         @foreach($estados as $key => $label)
         <option value="{{ $key }}" @selected(request('estado')===$key)>{{ $label }}</option>
         @endforeach
@@ -30,7 +61,7 @@
         <option value="{{ $c->id }}" @selected(request('categoria')==$c->id)>{{ $c->icono }} {{ $c->nombre }}</option>
         @endforeach
     </select>
-    <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
+    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
     @if(request()->hasAny(['buscar','estado','prioridad','categoria']))
     <a href="{{ route('tickets.index') }}" class="btn btn-outline btn-sm">✕ Limpiar</a>
     @endif
@@ -66,9 +97,9 @@
                     <td style="max-width:220px">
                         <a href="{{ route('tickets.show',$t) }}" class="link" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">{{ $t->titulo }}</a>
                     </td>
-                    <td style="font-size:13px">{{ $t->categoria->icono }} {{ $t->categoria->nombre }}</td>
+                    <td style="font-size:13px;color:var(--brand-blue);font-weight:500">{{ $t->categoria->icono }} {{ $t->categoria->nombre }}</td>
                     <td>
-                        <span style="display:inline-flex;align-items:center;gap:5px">
+                        <span style="display:inline-flex;align-items:center;gap:5px;font-weight:500" class="prio-text-{{ $t->prioridad }}">
                             <span class="prio-dot prio-{{ $t->prioridad }}"></span>
                             {{ ucfirst($t->prioridad) }}
                         </span>
@@ -81,7 +112,8 @@
                             @if($t->estaVencido())
                                 <span class="badge badge-red">Vencido</span>
                             @else
-                                <span style="font-size:12px;color:var(--text-muted)">{{ $t->fecha_limite->diffForHumans() }}</span>
+                                @php $prontoAVencer = now()->diffInHours($t->fecha_limite, false) <= 72; @endphp
+                                <span style="font-size:12px;font-weight:{{ $prontoAVencer ? '600' : '400' }};color:{{ $prontoAVencer ? 'var(--red)' : 'var(--text-muted)' }}">{{ $t->fecha_limite->diffForHumans() }}</span>
                                 @if($t->enPausaPorFinDeSemana())
                                     <br><span style="font-size:11px;color:#64748b">⏸️ en pausa</span>
                                 @endif

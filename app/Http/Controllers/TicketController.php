@@ -34,7 +34,27 @@ class TicketController extends Controller {
         $tickets    = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
         $categorias = Categoria::where('activa',true)->get();
         $estados    = Ticket::estados();
-        return view('tickets.index', compact('tickets','categorias','estados'));
+
+        // Tarjetas de resumen (respetan el mismo alcance de tickets que ve el usuario)
+        $baseScope = Ticket::query();
+        if ($user->esSolicitante())
+            $baseScope->where('solicitante_id', $user->id);
+        elseif ($user->esTecnico())
+            $baseScope->where(fn($q) => $q->where('tecnico_id', $user->id)->orWhereNull('tecnico_id'));
+
+        $resumen = [
+            'nuevos'         => (clone $baseScope)->where('estado', 'nuevo')->count(),
+            'asignados_a_mi' => (clone $baseScope)->where('tecnico_id', $user->id)->whereNotIn('estado', ['resuelto','cerrado'])->count(),
+            'pendientes'     => (clone $baseScope)->where('estado', 'pendiente')->count(),
+            'sla_por_vencer' => (clone $baseScope)->whereNotIn('estado', ['resuelto','cerrado'])
+                                    ->whereNotNull('fecha_limite')
+                                    ->whereBetween('fecha_limite', [now(), now()->addHours(24)])->count(),
+            'cerrados_mes'   => (clone $baseScope)->where('estado', 'cerrado')
+                                    ->whereMonth('fecha_resolucion', now()->month)
+                                    ->whereYear('fecha_resolucion', now()->year)->count(),
+        ];
+
+        return view('tickets.index', compact('tickets','categorias','estados','resumen'));
     }
 
     public function create() {

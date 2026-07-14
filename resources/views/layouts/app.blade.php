@@ -1,12 +1,20 @@
 @php $menuApps = \App\Models\MenuAplicacion::activos(); @endphp
 @if($menuApps->count() > 0)
-<style>body{padding-top:40px!important} .sidebar{top:40px!important;height:calc(100vh - 40px)!important}</style>
-<div style="position:fixed;top:0;left:0;right:0;height:40px;background:#fff;border-bottom:1px solid #e2e8f0;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<style>body{padding-top:48px!important} .sidebar{top:48px!important;height:calc(100vh - 48px)!important}</style>
+<div style="position:fixed;top:0;left:0;right:0;height:48px;background:#fff;border-bottom:1px solid #eef1f5;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+    <div style="display:flex;align-items:center;gap:8px;padding-right:18px;margin-right:14px;border-right:1px solid #eef1f5">
+        <svg viewBox="0 0 32 32" style="width:24px;height:24px;flex-shrink:0">
+            <path d="M2 18 Q10 4 30 8" fill="none" stroke="var(--brand-blue)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M2 24 Q12 10 30 14" fill="none" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:13.5px;font-weight:700;color:var(--navy);letter-spacing:-.2px">AMCHAMDR</span>
+    </div>
     @foreach($menuApps as $app)
+    @php $activo = !str($app->url)->startsWith('http'); @endphp
     <a href="{{ $app->url }}" {{ $app->nueva_ventana ? 'target="_blank"' : '' }}
-       style="display:flex;align-items:center;gap:6px;padding:0 14px;height:40px;font-size:12.5px;font-weight:500;color:#374151;text-decoration:none;border-right:1px solid #e2e8f0;transition:all .15s;white-space:nowrap"
-       onmouseover="this.style.color='#002049';this.style.background='#f1f5f9'"
-       onmouseout="this.style.color='#374151';this.style.background=''">
+       style="display:flex;align-items:center;gap:6px;padding:0 14px;height:48px;font-size:12.5px;font-weight:{{ $activo ? '700' : '500' }};color:{{ $activo ? 'var(--red)' : '#374151' }};text-decoration:none;border-right:1px solid #eef1f5;border-bottom:{{ $activo ? '2px solid var(--red)' : '2px solid transparent' }};transition:all .15s;white-space:nowrap"
+       onmouseover="this.style.color='{{ $activo ? '' : '#002049' }}';this.style.background='#f1f5f9'"
+       onmouseout="this.style.color='{{ $activo ? 'var(--red)' : '#374151' }}';this.style.background=''">
         <span>{{ $app->icono }}</span> {{ $app->nombre }}
     </a>
     @endforeach
