@@ -30,6 +30,7 @@ class HistorialTicket extends Model {
             'comentario' => '💬',
             'resolucion' => '✅',
             'sla'        => '⏱️',
+            'edicion'    => '✏️',
             default      => '📝',
         };
     }

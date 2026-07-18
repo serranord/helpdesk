@@ -315,6 +315,23 @@
             <form action="{{ route('tickets.gestionar',$ticket) }}" method="POST">
                 @csrf
 
+                @if(!in_array($ticket->estado, ['resuelto','cerrado']))
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">✏️ Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="4">{{ $ticket->descripcion }}</textarea>
+                    <div class="form-hint">Corrige aquí la descripción si el solicitante cometió un error al crearla.</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">✏️ Categoría</label>
+                    <select name="categoria_id" class="form-control">
+                        @foreach($categorias as $c)
+                        <option value="{{ $c->id }}" @selected($ticket->categoria_id===$c->id)>{{ $c->icono }} {{ $c->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
                 <div class="form-group" style="margin-bottom:14px">
                     <label class="form-label">Estado</label>
                     <select name="estado" class="form-control" id="select-estado">

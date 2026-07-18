@@ -150,8 +150,9 @@ class TicketController extends Controller {
         $ticketsVinculables = $user->puedeGestionar()
             ? Ticket::where('id','!=',$ticket->id)->whereNotIn('estado',['cerrado'])->whereDoesntHave('padreVinculado')->orderByDesc('created_at')->limit(50)->get()
             : collect();
+        $categorias = Categoria::where('activa', true)->orderBy('nombre')->get();
 
-        return view('tickets.show', compact('ticket','tecnicos','user','estados','ticketsVinculables'));
+        return view('tickets.show', compact('ticket','tecnicos','user','estados','ticketsVinculables','categorias'));
     }
 
     // ── TRABAJANDO HOY ───────────────────────────────────────────────────────
@@ -190,6 +191,8 @@ class TicketController extends Controller {
             'tecnico_id'  => 'nullable|exists:usuarios,id',
             'estimado_en' => 'nullable|date',
             'fecha_limite'=> 'nullable|date',
+            'descripcion' => 'nullable|string',
+            'categoria_id'=> 'nullable|exists:categorias,id',
         ]);
 
         $viejoEstado    = $ticket->estado_label;
@@ -197,6 +200,20 @@ class TicketController extends Controller {
         $viejoTecnico   = $ticket->tecnico_id;
         $viejaFechaLimite = $ticket->fecha_limite;
         $noEnviarCorreo = $request->boolean('no_enviar_correo');
+
+        // Edición de descripción/categoría: solo mientras el ticket no esté resuelto/cerrado
+        if (!in_array($ticket->estado, ['resuelto','cerrado'])) {
+            if ($request->filled('descripcion') && $request->descripcion !== $ticket->descripcion) {
+                $ticket->descripcion = $request->descripcion;
+                HistorialTicket::registrar($ticket->id, 'edicion', 'Se corrigió la descripción del ticket');
+            }
+            if ($request->filled('categoria_id') && (int) $request->categoria_id !== $ticket->categoria_id) {
+                $categoriaVieja = $ticket->categoria->nombre ?? '—';
+                $ticket->categoria_id = $request->categoria_id;
+                $ticket->save();
+                HistorialTicket::registrar($ticket->id, 'edicion', "Categoría cambiada de '{$categoriaVieja}' a '".Categoria::find($request->categoria_id)->nombre."'");
+            }
+        }
 
         $ticket->estado    = $request->estado;
         $ticket->prioridad = $request->prioridad;
