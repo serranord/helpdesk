@@ -2,7 +2,7 @@
 @section('title','Dashboard')
 @section('page-title','Dashboard')
 @section('topbar-actions')
-    <a href="{{ route('tickets.create') }}" class="btn btn-primary btn-sm">
+    <a href="{{ route('tickets.create') }}" class="btn btn-brand-red btn-sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
         Nueva Solicitud
     </a>

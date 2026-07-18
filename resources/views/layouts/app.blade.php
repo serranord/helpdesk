@@ -3,9 +3,9 @@
 <style>body{padding-top:48px!important} .sidebar{top:48px!important;height:calc(100vh - 48px)!important}</style>
 <div style="position:fixed;top:0;left:0;right:0;height:48px;background:#fff;border-bottom:1px solid #eef1f5;z-index:200;display:flex;align-items:center;padding:0 20px;gap:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
     <div style="display:flex;align-items:center;gap:8px;padding-right:18px;margin-right:14px;border-right:1px solid #eef1f5">
-        <svg viewBox="0 0 32 32" style="width:24px;height:24px;flex-shrink:0">
-            <path d="M2 18 Q10 4 30 8" fill="none" stroke="var(--brand-blue)" stroke-width="3.5" stroke-linecap="round"/>
-            <path d="M2 24 Q12 10 30 14" fill="none" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/>
+        <svg viewBox="0 0 32 24" style="width:26px;height:20px;flex-shrink:0">
+            <path d="M2 16 Q9 3 30 3" fill="none" stroke="var(--brand-blue)" stroke-width="3.2" stroke-linecap="round"/>
+            <path d="M2 21 Q13 12 30 12" fill="none" stroke="var(--red)" stroke-width="3.2" stroke-linecap="round"/>
         </svg>
         <span style="font-size:13.5px;font-weight:700;color:var(--navy);letter-spacing:-.2px">AMCHAMDR</span>
     </div>
@@ -18,7 +18,7 @@
         <span>{{ $app->icono }}</span> {{ $app->nombre }}
     </a>
     @endforeach
-    <div style="margin-left:auto;font-size:11px;color:#94a3b8">AMCHAMDR · Sistemas</div>
+    <div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--navy)">AMCHAMDR · Sistemas</div>
 </div>
 @endif
 

@@ -11,8 +11,10 @@ html,body{height:100%}
     --navy-dark:#001535;
     --navy-mid:#002a5c;
     --navy-light:#003070;
-    --red:#E8192C;
+    --red:#ed202e;
     --red-dark:#c41424;
+    --brand-blue:#0064a8;
+    --brand-blue-dark:#004d80;
 
     /* UI */
     --bg:#f7f8fa;
@@ -29,7 +31,7 @@ html,body{height:100%}
     --purple:#7c3aed;--purple-light:#ede9fe;
     --cyan:#0891b2;--cyan-light:#cffafe;
     --orange:#ea580c;--orange-light:#ffedd5;
-    --blue:#2563eb;--blue-light:#dbeafe;
+    --blue:#0064a8;--blue-light:#dbeafe;
 
     --radius:10px;--radius-sm:7px;
     --shadow:0 1px 3px rgba(0,0,0,.08);
@@ -116,12 +118,14 @@ tr:hover td{background:#f8fafc}
 /* ===== PRIORIDAD ===== */
 .prio-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
 .prio-baja{background:var(--green)}.prio-media{background:var(--blue)}.prio-alta{background:var(--amber)}.prio-critica{background:var(--red-status)}
+.prio-text-baja{color:var(--green)}.prio-text-media{color:var(--brand-blue)}.prio-text-alta{color:var(--amber)}.prio-text-critica{color:var(--red-status)}
 
 /* ===== BUTTONS ===== */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:var(--font);cursor:pointer;text-decoration:none;border:0.5px solid transparent;transition:all .15s;white-space:nowrap}
 .btn svg{width:15px;height:15px;flex-shrink:0}
-.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}.btn-primary:hover{background:var(--navy-dark)}
+.btn-primary{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue)}.btn-primary:hover{background:var(--brand-blue-dark)}
 .btn-danger{background:var(--red-status);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-brand-red{background:var(--red);color:#fff;border-color:var(--red)}.btn-brand-red:hover{background:var(--red-dark)}
 .btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#15803d}
 .btn-outline{background:transparent;border-color:var(--border);color:var(--text)}.btn-outline:hover{background:var(--surface-2);border-color:#cbd5e1}
 .btn-sm{padding:5px 12px;font-size:12px}.btn-sm svg{width:13px;height:13px}
@@ -134,7 +138,7 @@ tr:hover td{background:#f8fafc}
 .form-label{font-size:12.5px;font-weight:600;color:var(--text)}
 .required{color:var(--red)}
 .form-control{width:100%;padding:8px 12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;appearance:none}
-.form-control:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,45,91,.1)}
+.form-control:focus{outline:none;border-color:var(--brand-blue);box-shadow:0 0 0 3px rgba(0,100,168,.12)}
 textarea.form-control{resize:vertical;min-height:100px}
 .form-hint{font-size:11.5px;color:var(--text-muted)}
 
@@ -184,7 +188,7 @@ textarea.form-control{resize:vertical;min-height:100px}
 .mono{font-family:var(--mono);font-size:12.5px}.fw-600{font-weight:600}
 .empty-state{text-align:center;padding:48px 20px;color:var(--text-muted)}
 .empty-state svg{width:40px;height:40px;margin:0 auto 12px;opacity:.2;display:block;fill:none;stroke:currentColor;stroke-width:1.5}
-.link{color:var(--navy);text-decoration:none;font-weight:500}.link:hover{color:var(--red);text-decoration:underline}
+.link{color:var(--brand-blue);text-decoration:none;font-weight:500}.link:hover{color:var(--red);text-decoration:underline}
 .detail-item label{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);font-weight:700;display:block}
 .detail-item p{font-size:14px;color:var(--text);margin-top:3px;font-weight:500}
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:14px}
