@@ -28,7 +28,7 @@
     <a href="{{ route('tickets.index',['estado'=>'__abiertos__']) }}" class="stat-card" style="border-top-color:var(--red-status)">
         <div class="stat-label">SLA por vencer</div>
         <div class="stat-value" style="color:var(--red-status)">{{ $resumen['sla_por_vencer'] }}</div>
-        <div class="stat-sub">Ver detalles</div>
+        <div class="stat-sub stat-sub-red">Ver detalles</div>
     </a>
     <a href="{{ route('tickets.index',['estado'=>'cerrado']) }}" class="stat-card">
         <div class="stat-label">Cerrados (mes)</div>

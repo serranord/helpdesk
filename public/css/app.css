@@ -90,9 +90,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .stats-grid-5{grid-template-columns:repeat(5,1fr)}
 .stat-card{background:var(--surface);border:1px solid #eef1f5;border-top:2px solid var(--navy);box-shadow:0 1px 2px rgba(16,24,40,.04);border-radius:var(--radius);padding:18px 20px;text-decoration:none;display:block;color:inherit;transition:box-shadow .15s}
 .stat-card:hover{box-shadow:0 4px 14px rgba(16,24,40,.08)}
-.stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.stat-label{font-size:11px;font-weight:600;color:var(--brand-blue);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;opacity:.8}
 .stat-value{font-size:28px;font-weight:500;color:var(--navy);letter-spacing:-1px;line-height:1}
-.stat-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px}
+.stat-sub{font-size:11.5px;color:var(--brand-blue);margin-top:4px;font-weight:500}
+.stat-sub-red{color:var(--red)!important}
+.stat-card.red{border-top-color:var(--red-status)}
+.stat-card.red .stat-value{color:var(--red-status)}
+.stat-card.red .stat-sub{color:var(--red)}
 
 /* ===== TABLES ===== */
 .table-wrap{overflow-x:auto}
@@ -167,9 +171,10 @@ textarea.form-control{resize:vertical;min-height:100px}
 
 /* ===== FILTROS ===== */
 .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;background:var(--surface);border:1px solid #eef1f5;box-shadow:0 1px 2px rgba(16,24,40,.04);border-radius:14px;padding:12px 14px}
-.filtros .form-control{width:auto;min-width:130px;border-radius:20px;background:var(--surface-2);border-color:var(--border);padding:8px 16px}
+.filtros .form-control{flex:1 1 0;min-width:130px;border-radius:20px;background:var(--surface-2);border-color:var(--border);padding:8px 16px}
 .filtros .form-control:focus{background:var(--surface)}
-.filtro-search{position:relative;flex:1;min-width:200px}
+.filtros button,.filtros a.btn{flex:0 0 auto}
+.filtro-search{position:relative;flex:2 1 0;min-width:220px}
 .filtro-search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-muted);pointer-events:none}
 .filtro-search input{padding-left:36px!important;width:100%}
 
