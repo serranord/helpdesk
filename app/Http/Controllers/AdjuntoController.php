@@ -43,15 +43,15 @@ class AdjuntoController extends Controller {
         $ticket = $adjunto->ticket;
         if ($user->esSolicitante() && $ticket->solicitante_id !== $user->id) abort(403);
 
-        $path = storage_path("app/adjuntos/ticket-{$ticket->id}/{$adjunto->nombre_guardado}");
-        if (!file_exists($path)) abort(404, 'Archivo no encontrado.');
-        return response()->download($path, $adjunto->nombre_original);
+        $path = "adjuntos/ticket-{$ticket->id}/{$adjunto->nombre_guardado}";
+        if (!Storage::disk('local')->exists($path)) abort(404, 'Archivo no encontrado.');
+        return Storage::disk('local')->download($path, $adjunto->nombre_original);
     }
 
     public function destroy(Adjunto $adjunto) {
         if (!auth()->user()->puedeGestionar()) abort(403);
-        $path = storage_path("app/adjuntos/ticket-{$adjunto->ticket_id}/{$adjunto->nombre_guardado}");
-        if (file_exists($path)) unlink($path);
+        $path = "adjuntos/ticket-{$adjunto->ticket_id}/{$adjunto->nombre_guardado}";
+        Storage::disk('local')->delete($path);
         $adjunto->delete();
         return back()->with('success', 'Archivo eliminado.');
     }

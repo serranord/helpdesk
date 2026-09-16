@@ -455,8 +455,7 @@ class TicketController extends Controller {
         $titulo = $ticket->titulo;
 
         foreach ($ticket->adjuntos as $adj) {
-            $path = storage_path("app/adjuntos/ticket-{$ticket->id}/{$adj->nombre_guardado}");
-            if (file_exists($path)) unlink($path);
+            \Illuminate\Support\Facades\Storage::disk('local')->delete("adjuntos/ticket-{$ticket->id}/{$adj->nombre_guardado}");
         }
 
         $ticket->delete();
