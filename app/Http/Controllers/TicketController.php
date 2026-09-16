@@ -146,13 +146,14 @@ class TicketController extends Controller {
 
         $ticket->load(['categoria','solicitante','tecnico','creadoPor','comentarios.usuario','calificacion','adjuntos.usuario','historial.usuario','hijosVinculados.hijo.solicitante','padreVinculado.padre']);
         $tecnicos = Usuario::where('estado','activo')->whereIn('rol',['tecnico','administrador'])->orderBy('nombre')->get();
+        $solicitantes = Usuario::where('estado','activo')->orderBy('nombre')->get();
         $estados  = Ticket::estados();
         $ticketsVinculables = $user->puedeGestionar()
             ? Ticket::where('id','!=',$ticket->id)->whereNotIn('estado',['cerrado'])->whereDoesntHave('padreVinculado')->orderByDesc('created_at')->limit(50)->get()
             : collect();
         $categorias = Categoria::where('activa', true)->orderBy('nombre')->get();
 
-        return view('tickets.show', compact('ticket','tecnicos','user','estados','ticketsVinculables','categorias'));
+        return view('tickets.show', compact('ticket','tecnicos','solicitantes','user','estados','ticketsVinculables','categorias'));
     }
 
     // ── TRABAJANDO HOY ───────────────────────────────────────────────────────
@@ -223,6 +224,7 @@ class TicketController extends Controller {
             'estado'      => 'required|in:nuevo,abierto,asignado,en_proceso,pendiente,resuelto,cerrado',
             'prioridad'   => 'required|in:baja,media,alta,critica',
             'tecnico_id'  => 'nullable|exists:usuarios,id',
+            'solicitante_id' => 'required|exists:usuarios,id,estado,activo',
             'estimado_en' => 'nullable|date',
             'fecha_limite'=> 'nullable|date',
             'descripcion' => 'nullable|string',
@@ -232,6 +234,7 @@ class TicketController extends Controller {
         $viejoEstado    = $ticket->estado_label;
         $viejoPrioridad = $ticket->prioridad;
         $viejoTecnico   = $ticket->tecnico_id;
+        $viejoSolicitante = $ticket->solicitante->nombre;
         $viejaFechaLimite = $ticket->fecha_limite;
         $noEnviarCorreo = $request->boolean('no_enviar_correo');
 
@@ -252,6 +255,19 @@ class TicketController extends Controller {
         $ticket->estado    = $request->estado;
         $ticket->prioridad = $request->prioridad;
         $ticket->tecnico_id = $request->tecnico_id;
+
+        if ((int) $request->solicitante_id !== $ticket->solicitante_id) {
+            $ticket->solicitante_id = $request->solicitante_id;
+            $nuevoSolicitante = Usuario::findOrFail($request->solicitante_id);
+            HistorialTicket::registrar(
+                $ticket->id,
+                'edicion',
+                "Solicitante cambiado de '{$viejoSolicitante}' a '{$nuevoSolicitante->nombre}'",
+                'solicitante_id',
+                (string) $ticket->getOriginal('solicitante_id'),
+                (string) $nuevoSolicitante->id,
+            );
+        }
 
         if (in_array($request->estado, ['resuelto','cerrado'])) {
             $ticket->fecha_resolucion = now();

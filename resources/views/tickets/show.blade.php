@@ -333,6 +333,16 @@
                 @endif
 
                 <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Solicitante</label>
+                    <select name="solicitante_id" class="form-control" required>
+                        @foreach($solicitantes as $solicitante)
+                        <option value="{{ $solicitante->id }}" @selected($ticket->solicitante_id===$solicitante->id)>{{ $solicitante->nombre }}@if($solicitante->departamento) — {{ $solicitante->departamento }}@endif</option>
+                        @endforeach
+                    </select>
+                    <div class="form-hint">Úsalo si el ticket fue registrado para la persona equivocada.</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px">
                     <label class="form-label">Estado</label>
                     <select name="estado" class="form-control" id="select-estado">
                         @foreach($estados as $key => $label)
