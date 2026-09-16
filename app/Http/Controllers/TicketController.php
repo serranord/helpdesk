@@ -162,6 +162,8 @@ class TicketController extends Controller {
         $seleccionados = Ticket::with(['categoria','solicitante','tecnico'])
             ->where('trabajando_hoy', true)
             ->whereNotIn('estado', ['cerrado'])
+            ->orderByRaw('CASE WHEN orden_trabajando_hoy IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('orden_trabajando_hoy')
             ->orderByDesc('prioridad')
             ->get();
 
@@ -177,10 +179,42 @@ class TicketController extends Controller {
     public function toggleTrabajandoHoy(Ticket $ticket) {
         if (!auth()->user()->esAdministrador()) abort(403);
         $ticket->trabajando_hoy = !$ticket->trabajando_hoy;
+        $ticket->orden_trabajando_hoy = $ticket->trabajando_hoy
+            ? ((int) Ticket::where('trabajando_hoy', true)->max('orden_trabajando_hoy')) + 1
+            : null;
         $ticket->save();
         return back()->with('success', $ticket->trabajando_hoy
             ? "Ticket {$ticket->numero} agregado a Trabajando Hoy."
             : "Ticket {$ticket->numero} quitado de Trabajando Hoy.");
+    }
+
+    public function ordenarTrabajandoHoy(Request $request) {
+        if (!auth()->user()->esAdministrador()) abort(403);
+
+        $data = $request->validate([
+            'tickets'   => ['required', 'array'],
+            'tickets.*' => ['integer', 'distinct', 'exists:tickets,id'],
+        ]);
+
+        $ids = $data['tickets'];
+        $cantidadSeleccionada = Ticket::where('trabajando_hoy', true)
+            ->whereNotIn('estado', ['cerrado'])
+            ->count();
+
+        if (count($ids) !== $cantidadSeleccionada || Ticket::whereIn('id', $ids)
+            ->where('trabajando_hoy', true)
+            ->whereNotIn('estado', ['cerrado'])
+            ->count() !== count($ids)) {
+            return response()->json(['message' => 'La lista de tickets ya no es válida. Recarga la página e inténtalo de nuevo.'], 422);
+        }
+
+        \DB::transaction(function () use ($ids) {
+            foreach ($ids as $orden => $id) {
+                Ticket::whereKey($id)->update(['orden_trabajando_hoy' => $orden + 1]);
+            }
+        });
+
+        return response()->json(['message' => 'Orden actualizado.']);
     }
 
     // ── GESTIÓN UNIFICADA ────────────────────────────────────────────────────
