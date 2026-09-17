@@ -4,6 +4,7 @@
 @section('content')
 
 <div style="max-width:680px;display:flex;flex-direction:column;gap:20px">
+    <a href="{{ route('mcp.connections') }}" class="btn btn-secondary">Mis conexiones de IA</a>
 
     {{-- Info personal --}}
     <div class="card">

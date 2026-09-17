@@ -22,13 +22,15 @@ class MicrosoftAuthService
     // Generar URL de autorización de Microsoft
     public function getAuthUrl(): string
     {
+        $state = bin2hex(random_bytes(32));
+        session()->put('microsoft_oauth_state', $state);
         $params = http_build_query([
             'client_id'     => $this->clientId,
             'response_type' => 'code',
             'redirect_uri'  => $this->redirectUri,
             'scope'         => 'openid profile email User.Read',
             'response_mode' => 'query',
-            'state'         => csrf_token(),
+            'state'         => $state,
         ]);
 
         return "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/authorize?{$params}";

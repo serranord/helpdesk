@@ -2,6 +2,10 @@
 
 Sistema de soporte TI construido en Laravel 12 + Blade.
 
+## Conexión con IA mediante MCP
+
+Incluye un servidor MCP para consultar y buscar tickets, obtener estadísticas, listar categorías y crear tickets desde un cliente de IA. Consulta [configuración local y remota](docs/MCP.md).
+
 ## Instalación
 
 ```bash

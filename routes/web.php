@@ -29,6 +29,8 @@ Route::get ('/registro', [AuthController::class, 'showRegister'])->name('registe
 Route::post('/registro', [AuthController::class, 'register'])->name('register.submit');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/mcp/conexiones', [\App\Http\Controllers\McpConnectionController::class, 'index'])->name('mcp.connections');
+    Route::delete('/mcp/conexiones/{client}', [\App\Http\Controllers\McpConnectionController::class, 'destroy'])->name('mcp.connections.destroy');
     Route::get('/', fn() => redirect()->route('dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

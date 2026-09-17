@@ -120,7 +120,7 @@ class TicketApiController extends Controller
     public function porNumero(string $numero): JsonResponse
     {
         $ticket = Ticket::with(['categoria','solicitante','tecnico','comentarios' => function($q) {
-            $q->where('es_interno', false)->orderByDesc('created_at')->limit(3);
+            $q->where('es_interno', false)->reorder()->orderByDesc('created_at')->orderByDesc('id')->limit(3);
         }])
         ->where('numero', strtoupper($numero))
         ->first();
@@ -138,9 +138,9 @@ class TicketApiController extends Controller
             'titulo'        => $ticket->titulo,
             'estado'        => $ticket->estado_label,
             'prioridad'     => ucfirst($ticket->prioridad),
-            'categoria'     => $ticket->categoria->nombre,
+            'categoria'     => $ticket->categoria?->nombre ?? 'Sin categoría',
             'tecnico'       => $ticket->tecnico?->nombre ?? 'Sin asignar',
-            'solicitante'   => $ticket->solicitante->nombre,
+            'solicitante'   => $ticket->solicitante?->nombre ?? 'Usuario eliminado',
             'creado'        => $ticket->created_at->format('d/m/Y H:i'),
             'estimado_en'   => $ticket->estimado_en?->format('d/m/Y H:i'),
             'sla_vencido'   => $ticket->estaVencido(),

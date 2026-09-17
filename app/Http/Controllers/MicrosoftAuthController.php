@@ -19,6 +19,12 @@ class MicrosoftAuthController extends Controller
 
     public function callback(Request $request)
     {
+        $expectedState = $request->session()->pull('microsoft_oauth_state');
+        $state = $request->input('state');
+        if (!is_string($expectedState) || !is_string($state) || !hash_equals($expectedState, $state)) {
+            return redirect()->route('login')->withErrors(['correo' => 'La sesión de Microsoft expiró o no es válida. Inicia sesión de nuevo.']);
+        }
+
         // Verificar que no hubo error
         if ($request->has('error')) {
             return redirect()->route('login')
@@ -61,8 +67,9 @@ class MicrosoftAuthController extends Controller
             ->first();
 
         if ($usuario) {
-            // Restaurar si estaba eliminado
-            if ($usuario->trashed()) $usuario->restore();
+            if ($usuario->trashed() || $usuario->estado !== 'activo') {
+                return redirect()->route('login')->withErrors(['correo' => 'Tu cuenta está inactiva. Contacta al administrador.']);
+            }
 
             // Actualizar datos desde Microsoft
             $usuario->update([
@@ -71,7 +78,6 @@ class MicrosoftAuthController extends Controller
                 'departamento'    => $userData['departamento'] ?? $usuario->departamento,
                 'cargo'           => $userData['cargo'] ?? $usuario->cargo,
                 'login_microsoft' => true,
-                'estado'          => 'activo',
             ]);
         } else {
             // Crear usuario nuevo
@@ -96,6 +102,8 @@ class MicrosoftAuthController extends Controller
 
         // Iniciar sesión
         Auth::login($usuario, true);
+        $request->session()->regenerate();
+        $request->session()->put('mcp.microsoft_user_id', $usuario->id);
         ActividadLog::registrar('login', 'sesion', 'Inició sesión con Microsoft 365');
 
         return redirect()->intended(route('dashboard'));
