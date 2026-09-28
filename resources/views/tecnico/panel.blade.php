@@ -34,7 +34,7 @@
             <div class="card-title">Mis Tickets Asignados</div>
         </div>
         @forelse($misTickets as $t)
-        <a href="{{ route('tickets.show',$t) }}" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);text-decoration:none;transition:background .15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
+        <a href="{{ route('tickets.show',$t) }}" @class(['ticket-diferido' => $t->estado === 'diferido']) style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);text-decoration:none;transition:background .15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
             <span class="prio-dot prio-{{ $t->prioridad }}" style="width:10px;height:10px"></span>
             <div style="flex:1;min-width:0">
                 <div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titulo }}</div>
@@ -69,7 +69,7 @@
             <span class="badge badge-cyan">{{ $sinAsignar->count() }}</span>
         </div>
         @forelse($sinAsignar as $t)
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div @class(['ticket-diferido' => $t->estado === 'diferido']) style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)">
             <span class="prio-dot prio-{{ $t->prioridad }}" style="width:10px;height:10px"></span>
             <div style="flex:1;min-width:0">
                 <a href="{{ route('tickets.show',$t) }}" style="font-size:13.5px;font-weight:600;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">{{ $t->titulo }}</a>

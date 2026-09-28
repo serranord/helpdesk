@@ -221,7 +221,7 @@ class TicketController extends Controller {
     // ── GESTIÓN UNIFICADA ────────────────────────────────────────────────────
     public function gestionar(Request $request, Ticket $ticket) {
         $request->validate([
-            'estado'      => 'required|in:nuevo,abierto,asignado,en_proceso,pendiente,resuelto,cerrado',
+            'estado'      => ['required', \Illuminate\Validation\Rule::in(array_keys(Ticket::estados()))],
             'prioridad'   => 'required|in:baja,media,alta,critica',
             'tecnico_id'  => 'nullable|exists:usuarios,id',
             'solicitante_id' => 'required|exists:usuarios,id,estado,activo',
@@ -328,7 +328,7 @@ class TicketController extends Controller {
     }
 
     public function cambiarEstado(Request $request, Ticket $ticket) {
-        $request->validate(['estado' => 'required|in:nuevo,abierto,asignado,en_proceso,pendiente,resuelto,cerrado']);
+        $request->validate(['estado' => ['required', \Illuminate\Validation\Rule::in(array_keys(Ticket::estados()))]]);
         $viejo = $ticket->estado_label;
         $noEnviarCorreo = $request->boolean('no_enviar_correo');
         $ticket->estado = $request->estado;
@@ -400,8 +400,9 @@ class TicketController extends Controller {
 
     public function reabrir(Request $request, Ticket $ticket) {
         $user = auth()->user();
-        if ($ticket->solicitante_id !== $user->id) abort(403);
-        if (!in_array($ticket->estado, ['resuelto','cerrado'])) return back()->with('error', 'Solo puedes reabrir tickets resueltos o cerrados.');
+        if ($ticket->solicitante_id !== $user->id && !($ticket->estado === 'diferido' && $user->puedeGestionar())) abort(403);
+        if (!in_array($ticket->estado, ['resuelto','cerrado','diferido'])) return back()->with('error', 'Solo puedes reabrir tickets resueltos, cerrados o diferidos.');
+        $request->validate(['motivo' => 'nullable|string|max:2000']);
 
         $ticket->estado           = 'abierto';
         $ticket->reabierto        = true;
@@ -409,7 +410,7 @@ class TicketController extends Controller {
         $ticket->save();
 
         Comentario::create(['ticket_id'=>$ticket->id,'usuario_id'=>$user->id,'contenido'=>"Ticket reabierto. Motivo: ".($request->motivo ?? 'El problema persiste.'),'es_interno'=>false]);
-        HistorialTicket::registrar($ticket->id, 'reapertura', 'Ticket reabierto por el solicitante');
+        HistorialTicket::registrar($ticket->id, 'reapertura', 'Ticket reabierto por '.$user->nombre);
 
         if ($ticket->tecnico_id) {
             Notificacion::create(['usuario_id'=>$ticket->tecnico_id,'tipo'=>'ticket_asignado','titulo'=>'Ticket reabierto','mensaje'=>"El ticket {$ticket->numero} fue reabierto",'url'=>route('tickets.show',$ticket),'referencia'=>$ticket->numero]);

@@ -46,6 +46,7 @@ class Ticket extends Model {
             'asignado'   => 'Asignado',
             'en_proceso' => 'En Proceso',
             'pendiente'  => 'Pendiente',
+            'diferido'   => 'Diferido',
             'resuelto'   => 'Resuelto',
             'cerrado'    => 'Cerrado',
         ];
@@ -72,6 +73,7 @@ class Ticket extends Model {
             'asignado'   => 'rose',
             'en_proceso' => 'orange',
             'pendiente'  => 'amber',
+            'diferido'   => 'gray',
             'resuelto'   => 'green',
             'cerrado'    => 'gray',
             default      => 'gray',

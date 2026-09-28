@@ -125,7 +125,7 @@
             </thead>
             <tbody>
                 @foreach($tickets as $t)
-                <tr>
+                <tr @class(['ticket-diferido' => $t->estado === 'diferido'])>
                     <td><a href="{{ route('tickets.show',$t) }}" class="link mono">{{ $t->numero }}</a></td>
                     <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titulo }}</td>
                     <td style="font-size:12.5px">{{ $t->categoria->icono }} {{ $t->categoria->nombre }}</td>

@@ -113,6 +113,15 @@ tr:hover td{background:#f8fafc}
 .badge-amber{background:#fef3c7;color:#92400e}
 .badge-blue{background:#dbeafe;color:#1e40af}
 .badge-gray{background:#f1f5f9;color:#475569}
+/* Casos diferidos: atenuados, pero legibles y completamente interactivos. */
+.ticket-diferido,
+tr.ticket-diferido>td{background:#f1f3f5!important;color:#59636e!important}
+.ticket-diferido :is(a,div,span):not(.btn){color:#59636e!important}
+.ticket-diferido .badge,.ticket-diferido .vencido-badge{background:#e2e5e9!important;color:#4b5563!important}
+.ticket-diferido .prio-dot{background:#8b949e!important}
+.ticket-diferido:hover,
+tr.ticket-diferido:hover>td{background:#e8ebef!important}
+.ticket-diferido a:hover,.ticket-diferido a:focus-visible{text-decoration:underline}
 .badge-purple{background:#ede9fe;color:#5b21b6}
 .badge-rose{background:#fce7f3;color:#9d174d}
 .badge-cyan{background:#cffafe;color:#164e63}

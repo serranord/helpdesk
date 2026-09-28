@@ -146,7 +146,7 @@
         @else
         <div style="display:flex;flex-direction:column;gap:8px">
             @foreach($recientes as $t)
-            <a href="{{ route('tickets.show',$t) }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:10px;border-radius:8px;border:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
+            <a href="{{ route('tickets.show',$t) }}" @class(['ticket-diferido' => $t->estado === 'diferido']) style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:10px;border-radius:8px;border:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background=''">
                 <span class="prio-dot prio-{{ $t->prioridad }}"></span>
                 <div style="flex:1;min-width:0">
                     <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titulo }}</div>
@@ -169,7 +169,7 @@
         @else
         <div style="display:flex;flex-direction:column;gap:8px">
             @foreach($criticos as $t)
-            <a href="{{ route('tickets.show',$t) }}" style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:10px;border-radius:8px;background:var(--red-light);border:1px solid #fca5a5;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+            <a href="{{ route('tickets.show',$t) }}" @class(['ticket-diferido' => $t->estado === 'diferido']) style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:10px;border-radius:8px;background:var(--red-light);border:1px solid #fca5a5;transition:opacity .15s" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
                 <div style="flex:1;min-width:0">
                     <div style="font-size:13px;font-weight:600;color:#7f1d1d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $t->titulo }}</div>
                     <div style="font-size:11.5px;color:#991b1b;margin-top:2px">{{ $t->numero }} · {{ $t->solicitante->nombre }}</div>

@@ -8,7 +8,11 @@
 
 {{-- Alerta si es ticket reabierto --}}
 @if($ticket->reabierto)
-<div class="alert alert-warning">🔄 Este ticket fue reabierto por el solicitante porque el problema persistió.</div>
+<div class="alert alert-warning">🔄 Este ticket fue reabierto para retomar su atención.</div>
+@endif
+
+@if($ticket->estado === 'diferido')
+<div class="alert ticket-diferido">⏸️ Caso diferido: actualmente no hay una solución disponible. Puedes reabrirlo para retomar su atención.</div>
 @endif
 
 <div class="grid-2" style="align-items:start">
@@ -245,6 +249,7 @@
                     'asignado'   => ['emoji'=>'👨‍💻','texto'=>'Asignado',         'color'=>'var(--purple)', 'sub'=>'Un técnico tomó tu caso'],
                     'en_proceso' => ['emoji'=>'🔧','texto'=>'En Proceso',       'color'=>'var(--orange)', 'sub'=>'El técnico está trabajando'],
                     'pendiente'  => ['emoji'=>'⏸️','texto'=>'En Espera',        'color'=>'var(--amber)',  'sub'=>'Esperando información o recursos'],
+                    'diferido'   => ['emoji'=>'⏸️','texto'=>'Diferido',         'color'=>'var(--text-muted)', 'sub'=>'Actualmente no hay una solución disponible'],
                     'resuelto'   => ['emoji'=>'✅','texto'=>'Resuelto',         'color'=>'var(--green)',  'sub'=>'Tu caso ha sido resuelto'],
                     'cerrado'    => ['emoji'=>'🔒','texto'=>'Cerrado',          'color'=>'var(--text-muted)','sub'=>'Ticket finalizado'],
                     default      => ['emoji'=>'📋','texto'=>$ticket->estado_label,'color'=>'var(--text-muted)','sub'=>''],
@@ -292,8 +297,8 @@
             </div>
         </div>
 
-        {{-- Botón reabrir (solicitante) --}}
-        @if($user->esSolicitante() && in_array($ticket->estado,['resuelto','cerrado']) && !$ticket->calificacion)
+        {{-- Reapertura de casos diferidos o finalizados --}}
+        @if(($ticket->estado === 'diferido' && ($ticket->solicitante_id === $user->id || $user->puedeGestionar())) || ($user->esSolicitante() && in_array($ticket->estado,['resuelto','cerrado']) && !$ticket->calificacion))
         <div class="card">
             <div class="section-title">¿El problema persiste?</div>
             <form action="{{ route('tickets.reabrir',$ticket) }}" method="POST">

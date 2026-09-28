@@ -135,6 +135,7 @@ class TeamsService
         $emoji = match($ticket->estado) {
             'en_proceso' => '🔧',
             'pendiente'  => '⏸️',
+            'diferido'   => '⏸️',
             'resuelto'   => '✅',
             'cerrado'    => '🔒',
             default      => '🔄',
@@ -272,7 +273,7 @@ class TeamsService
                 ['type' => 'FactSet', 'facts' => [
                     ['title' => 'Número:', 'value' => $ticket->numero],
                     ['title' => 'Título:', 'value' => $ticket->titulo],
-                    ['title' => 'Motivo:', 'value' => 'El problema persiste según el solicitante'],
+                    ['title' => 'Detalle:', 'value' => 'Se reabrió el ticket para retomar su atención'],
                 ]],
             ],
             'actions' => [$this->accionVerTicket($ticket)],

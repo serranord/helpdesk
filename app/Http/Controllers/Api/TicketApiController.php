@@ -212,6 +212,7 @@ class TicketApiController extends Controller
             'pendiente'  => "está en espera de información o recursos adicionales.",
             'resuelto'   => "fue resuelto el {$ticket->fecha_resolucion?->format('d/m/Y')}.",
             'cerrado'    => "está cerrado.",
+            'diferido'   => "está diferido porque actualmente no hay una solución disponible. Puede reabrirse para retomar su atención.",
             default      => "está en estado {$ticket->estado_label}.",
         };
 

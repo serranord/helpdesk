@@ -16,7 +16,7 @@
         </div>
         <div id="tickets-trabajando-hoy" class="tickets-ordenables" style="max-height:70vh;overflow-y:auto">
             @forelse($seleccionados as $t)
-            <div class="ticket-ordenable" data-ticket-id="{{ $t->id }}" draggable="true" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border)">
+            <div @class(['ticket-ordenable', 'ticket-diferido' => $t->estado === 'diferido']) data-ticket-id="{{ $t->id }}" draggable="true" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border)">
                 <span class="ticket-arrastre" title="Arrastra para cambiar el orden" aria-hidden="true">&#8285;</span>
                 <div style="min-width:0;flex:1">
                     <a href="{{ route('tickets.show',$t) }}" style="font-size:13.5px;font-weight:600;color:var(--text);text-decoration:none">{{ $t->numero }} — {{ $t->titulo }}</a>
@@ -45,7 +45,7 @@
         </div>
         <div style="max-height:70vh;overflow-y:auto">
             @forelse($disponibles as $t)
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border)">
+            <div @class(['ticket-diferido' => $t->estado === 'diferido']) style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border)">
                 <div style="min-width:0">
                     <a href="{{ route('tickets.show',$t) }}" style="font-size:13.5px;font-weight:600;color:var(--text);text-decoration:none">{{ $t->numero }} — {{ $t->titulo }}</a>
                     <div style="font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
