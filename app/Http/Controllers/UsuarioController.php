@@ -4,9 +4,15 @@ use App\Models\Usuario; use App\Models\ActividadLog;
 use Illuminate\Http\Request; use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller {
-    public function index() {
-        $usuarios = Usuario::orderBy('nombre')->paginate(20);
-        return view('usuarios.index', compact('usuarios'));
+    public function index(Request $request) {
+        $verEliminados = $request->boolean('eliminados');
+        $usuarios = Usuario::query()
+            ->when($verEliminados, fn ($query) => $query->onlyTrashed())
+            ->orderBy('nombre')
+            ->orderBy('id')
+            ->paginate(20)
+            ->appends($verEliminados ? ['eliminados' => 1] : []);
+        return view('usuarios.index', compact('usuarios', 'verEliminados'));
     }
     public function create() { return view('usuarios.create'); }
     public function store(Request $request) {
@@ -17,6 +23,8 @@ class UsuarioController extends Controller {
             'rol'         => 'required|in:administrador,tecnico,solicitante',
             'telefono'    => 'nullable|string|max:20',
             'departamento'=> 'nullable|string|max:100',
+        ], [
+            'correo.unique' => 'Este correo ya está registrado. Revisa la cuenta existente en Usuarios. Si fue eliminada, conserva el correo reservado y necesita restaurarse.',
         ]);
         $data['password'] = Hash::make($data['password']);
         $u = Usuario::create($data);
@@ -32,6 +40,8 @@ class UsuarioController extends Controller {
             'estado'      => 'required|in:activo,inactivo',
             'telefono'    => 'nullable|string|max:20',
             'departamento'=> 'nullable|string|max:100',
+        ], [
+            'correo.unique' => 'Este correo ya está registrado. Revisa la cuenta existente en Usuarios. Si fue eliminada, conserva el correo reservado y necesita restaurarse.',
         ]);
         if ($request->filled('password')) {
             $request->validate(['password' => 'min:6|confirmed']);
