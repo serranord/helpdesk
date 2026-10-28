@@ -42,6 +42,22 @@
     <div class="card" style="padding:0">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
             <div class="card-title" style="margin-bottom:0">🗂️ Tickets disponibles ({{ $disponibles->count() }})</div>
+            <form method="GET" action="{{ route('tickets.trabajando-hoy') }}" style="margin-top:12px;display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+                <div style="flex:1;min-width:200px">
+                    <label for="estado-disponibles" class="form-label">Estado</label>
+                    <select id="estado-disponibles" name="estado" class="form-control">
+                        <option value="" @selected(!$estado)>Todos los estados</option>
+                        <option value="__abiertos__" @selected($estado === '__abiertos__')>Todos (excepto resueltos/cerrados)</option>
+                        @foreach($estados as $key => $label)
+                        <option value="{{ $key }}" @selected($estado === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                @if(request()->has('estado'))
+                <a href="{{ route('tickets.trabajando-hoy') }}" class="btn btn-outline btn-sm">Limpiar</a>
+                @endif
+            </form>
         </div>
         <div style="max-height:70vh;overflow-y:auto">
             @forelse($disponibles as $t)
@@ -57,11 +73,15 @@
                 </div>
                 <form action="{{ route('tickets.trabajando-hoy.toggle',$t) }}" method="POST" style="flex-shrink:0">
                     @csrf
+                    @if($t->estado === 'cerrado')
+                    <span style="font-size:12px;color:var(--text-muted)">Cerrado</span>
+                    @else
                     <button type="submit" class="btn btn-primary btn-sm">+ Agregar</button>
+                    @endif
                 </form>
             </div>
             @empty
-            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">No hay más tickets disponibles.</div>
+            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">No hay tickets disponibles para el estado seleccionado.</div>
             @endforelse
         </div>
     </div>

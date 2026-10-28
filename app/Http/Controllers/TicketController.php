@@ -157,7 +157,7 @@ class TicketController extends Controller {
     }
 
     // ── TRABAJANDO HOY ───────────────────────────────────────────────────────
-    public function trabajandoHoy() {
+    public function trabajandoHoy(Request $request) {
         if (!auth()->user()->esAdministrador()) abort(403);
 
         $seleccionados = Ticket::with(['categoria','solicitante','tecnico'])
@@ -168,13 +168,20 @@ class TicketController extends Controller {
             ->orderByDesc('prioridad')
             ->get();
 
-        $disponibles = Ticket::with(['categoria','solicitante','tecnico'])
-            ->where('trabajando_hoy', false)
-            ->whereNotIn('estado', ['cerrado'])
-            ->orderByDesc('created_at')
-            ->get();
+        $estado = $request->query('estado', '__abiertos__');
+        $estados = Ticket::estados();
+        $query = Ticket::with(['categoria','solicitante','tecnico'])
+            ->where('trabajando_hoy', false);
 
-        return view('tickets.trabajando-hoy', compact('seleccionados','disponibles'));
+        if ($estado === '__abiertos__') {
+            $query->whereNotIn('estado', ['resuelto','cerrado']);
+        } elseif ($request->filled('estado')) {
+            $query->where('estado', $estado);
+        }
+
+        $disponibles = $query->orderByDesc('created_at')->get();
+
+        return view('tickets.trabajando-hoy', compact('seleccionados','disponibles','estados','estado'));
     }
 
     public function toggleTrabajandoHoy(Ticket $ticket) {
