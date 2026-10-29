@@ -15,7 +15,7 @@
 <div class="alert ticket-diferido">⏸️ Caso diferido: actualmente no hay una solución disponible. Puedes reabrirlo para retomar su atención.</div>
 @endif
 
-<div class="grid-2" style="align-items:start">
+<div class="grid-2 ticket-detail" style="align-items:start">
 
     {{-- COLUMNA PRINCIPAL --}}
     <div style="display:flex;flex-direction:column;gap:20px">
